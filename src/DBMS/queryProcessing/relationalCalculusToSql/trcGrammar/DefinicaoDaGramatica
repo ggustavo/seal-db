@@ -1,0 +1,8 @@
+Query <- { ListOfTupleProjections | Formula }
+
+ListOfTupleProjections <- (TupleProjection)(,TupleProjection)*
+
+Formula <- Formular
+
+
+atomicFormula <-

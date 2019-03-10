@@ -1,0 +1,16 @@
+
+select p_name, p_mfgr, p_size, suppkey, ps_supplycost
+
+from part p, partsupp ps 
+
+where p.partkey = ps.partkey and p.p_size >= 5
+
+
+_____________________________________________________________________________________________
+
+select n.n_name, r.r_name, c.c_phone
+
+from nation n, customer c, region r
+
+where n.nationkey = c.nationkey and n.regionkey = r.regionkey order by n.n_name desc
+

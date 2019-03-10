@@ -1,0 +1,48 @@
+create database quiz;
+
+create table questionario ( questionario_id int, questionario_nome varchar);
+create table pergunta ( pergunta_id int, pergunta_texto varchar, questionario_id_fk int);
+create table resposta ( resposta_id int, resposta_texto varchar, pergunta_id_fk int, usuario_id_fk int);
+create table usuario ( usuario_id int, usuario_nome varchar);
+
+
+INSERT INTO questionario (questionario_id, questionario_nome) VALUES ( 1, 'Avaliacao do Curso'); 
+INSERT INTO questionario (questionario_id, questionario_nome) VALUES ( 2, 'Esportes'); 
+INSERT INTO questionario (questionario_id, questionario_nome) VALUES ( 3, 'Satisfacao do Hospede com Servicos do Hotel'); 
+
+INSERT INTO pergunta (pergunta_id, pergunta_texto, questionario_id_fk) VALUES ( 1, 'Em que ano da escola voce?', 1); 
+INSERT INTO pergunta (pergunta_id, pergunta_texto, questionario_id_fk) VALUES ( 2, 'A dificuldade do curso correspondia com as suas expectativas?', 1); 
+INSERT INTO pergunta (pergunta_id, pergunta_texto, questionario_id_fk) VALUES ( 3, 'Voce recomendaria este curso para outros alunos?', 1); 
+
+INSERT INTO pergunta (pergunta_id, pergunta_texto, questionario_id_fk) VALUES ( 1, 'Em que ano da escola voce esta?', 1); 
+INSERT INTO pergunta (pergunta_id, pergunta_texto, questionario_id_fk) VALUES ( 2, 'A dificuldade do curso correspondia com as suas expectativas?', 1); 
+INSERT INTO pergunta (pergunta_id, pergunta_texto, questionario_id_fk) VALUES ( 3, 'Voce recomendaria este curso para outros alunos?', 1); 
+
+INSERT INTO pergunta (pergunta_id, pergunta_texto, questionario_id_fk) VALUES ( 4, 'Voce gosta de atividades com muita adrenalina, em geral?', 2); 
+INSERT INTO pergunta (pergunta_id, pergunta_texto, questionario_id_fk) VALUES ( 5, 'Voce assiste a exportes na televisao?', 2); 
+INSERT INTO pergunta (pergunta_id, pergunta_texto, questionario_id_fk) VALUES ( 6, 'Saindo de sua casa, quantos quilometros Voce percorre para experimentar um esporte?', 2); 
+INSERT INTO pergunta (pergunta_id, pergunta_texto, questionario_id_fk) VALUES ( 7, 'Voce pode praticar seu esporte preferido em sua cidade ou Voce deve viajar para outro lugar?', 2); 
+INSERT INTO pergunta (pergunta_id, pergunta_texto, questionario_id_fk) VALUES ( 8, 'Voce gosta de consumir bebidas energeticas?', 2); 
+INSERT INTO pergunta (pergunta_id, pergunta_texto, questionario_id_fk) VALUES ( 9, 'Que tipo de roupa Voce gosta de usar na maioria dos esportes?', 2); 
+
+INSERT INTO pergunta (pergunta_id, pergunta_texto, questionario_id_fk) VALUES ( 10, 'Voce se sentiu bem-vindo quando Voce entrou no nosso hotel?', 3); 
+INSERT INTO pergunta (pergunta_id, pergunta_texto, questionario_id_fk) VALUES ( 11, 'Em geral, como Voce avaliaria a sua experiencia no nosso hotel?', 3); 
+INSERT INTO pergunta (pergunta_id, pergunta_texto, questionario_id_fk) VALUES ( 12, 'Por favor, diga-nos o que podemos fazer para melhorar?', 3); 
+
+INSERT INTO usuario (usuario_id , usuario_nome) VALUES ( 1, 'Gustavo');
+INSERT INTO usuario (usuario_id , usuario_nome) VALUES ( 2, 'Marcio');
+INSERT INTO usuario (usuario_id , usuario_nome) VALUES ( 3, 'Juliana');
+INSERT INTO usuario (usuario_id , usuario_nome) VALUES ( 4, 'Raul');
+
+INSERT INTO resposta (resposta_id, resposta_texto, pergunta_id_fk, usuario_id_fk) VALUES ( 1, 'Sim', 10, 2); 
+INSERT INTO resposta (resposta_id, resposta_texto, pergunta_id_fk, usuario_id_fk) VALUES ( 2, 'Nao', 10, 3); 
+INSERT INTO resposta (resposta_id, resposta_texto, pergunta_id_fk, usuario_id_fk) VALUES ( 3, 'Sim', 10, 1); 
+
+INSERT INTO resposta (resposta_id, resposta_texto, pergunta_id_fk, usuario_id_fk) VALUES ( 4, 'Boa', 11, 1); 
+INSERT INTO resposta (resposta_id, resposta_texto, pergunta_id_fk, usuario_id_fk) VALUES ( 5, 'Regular', 11, 2); 
+INSERT INTO resposta (resposta_id, resposta_texto, pergunta_id_fk, usuario_id_fk) VALUES ( 6, 'Boa', 11, 2); 
+INSERT INTO resposta (resposta_id, resposta_texto, pergunta_id_fk, usuario_id_fk) VALUES ( 7, 'Ruim', 11, 3); 
+INSERT INTO resposta (resposta_id, resposta_texto, pergunta_id_fk, usuario_id_fk) VALUES ( 8, 'Boa', 11, 3); 
+INSERT INTO resposta (resposta_id, resposta_texto, pergunta_id_fk, usuario_id_fk) VALUES ( 9, 'Boa', 11, 4); 
+INSERT INTO resposta (resposta_id, resposta_texto, pergunta_id_fk, usuario_id_fk) VALUES ( 10, 'Regular', 11, 1); 
+

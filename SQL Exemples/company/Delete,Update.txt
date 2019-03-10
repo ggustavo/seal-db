@@ -1,0 +1,29 @@
+_________________________________________________________________________
+
+UPDATE employee SET  
+	
+employee_name = 'Mateus Lopes' 
+	
+WHERE employee_id = 1
+
+_________________________________________________________________________
+
+DELETE from sales 
+
+WHERE sales_id = 52;
+
+_________________________________________________________________________
+
+UPDATE sales SET  
+	
+date = '04/10/2017' 
+	
+WHERE sales_id = 1;
+
+_________________________________________________________________________
+
+UPDATE client SET  
+	
+client_name = 'Gustavo Moraes' 
+	
+WHERE client_id = 1;

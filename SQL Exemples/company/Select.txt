@@ -1,0 +1,35 @@
+SELECT client_name, date, amount, product_name, price,  employee_name
+
+FROM   sales, client, employee,product 
+
+WHERE 
+             employee_id = employee_id_fk and 
+             product_id = product_id_fk  and
+             client_id =  client_id_fk
+
+ORDER BY  product_name;
+
+_________________________________________________________________________________
+
+SELECT branch_name, employee_name, salary
+
+FROM    employee, branch
+
+WHERE
+             branch_id = branch_id_fk;
+
+________________________________________________________________________________________________
+
+select s.date, e.employee_name 
+
+from sales s, employee e 
+
+where s.employee_id_fk = e.employee_id
+
+________________________________________________________________________________________________
+
+select s.date, c.client_name
+
+from client c, sales s 
+
+where c.client_id = s.client_id_fk

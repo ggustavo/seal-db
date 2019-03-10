@@ -1,0 +1,265 @@
+/*
+* Tuple Relational Query Specification
+* Para gerar:
+* cd trcToSql.trcGrammar
+* javacc TrcGrammar.jj
+* cd ..
+*/
+
+options
+{
+  static = false;
+}
+
+PARSER_BEGIN(TrcGrammar)
+package trcToSql.trcGrammar;
+import java.util.ArrayList;
+import java.util.List;
+import trcToSql.trcQueryElements.*;
+
+public class TrcGrammar
+{
+  public static void main(String args []) throws ParseException
+  {
+    TrcGrammar parser = new TrcGrammar(System.in);
+ 	Query p = parser.query();   
+  }
+}
+
+PARSER_END(TrcGrammar)
+
+
+
+//TODO: Definir comentarios no skip
+TOKEN:
+{
+    < #BREAKLINE  : "\n"|"\r\n" >
+}
+
+SKIP :
+{
+  " "
+| "\r"
+| "\r\n"
+| "\t"
+| "\n"
+}
+
+SPECIAL_TOKEN :
+{
+  <COMENTARIO_UMA_LINHA: "//" (~["\n","\r"])* ("\n"|"\r"|"\r\n")>
+}
+
+TOKEN: /*ABREVIACOES*/
+{
+  < #LETRA : ["a"-"z"]|["A"-"Z"] >
+| < #DIGITO : ["0"-"9"] >
+}
+
+/* OPERADORES LOGICOS */
+TOKEN :
+{
+  <OR : "OR">
+  | <AND : "AND">
+  | <NOT : "NOT">
+  | <ARROW : "->">
+}
+
+/*QUANTIFICADORES*/
+TOKEN :
+{
+  <EXISTS : "EXISTS">
+  | <FORALL : "FORALL">
+}
+
+
+/*COMPARADORES*/
+TOKEN :
+{
+  <LPAREN : "(">
+  | <RPAREN : ")">
+  | <LBRACE : "{">
+  | <RBRACE : "}">
+  | <LESSTHAN : "<">
+  | <LESSOREQUALTHAN : "<=">
+  | <GREATERTHAN : ">">
+  | <GREATEROREQUALTHAN : ">=">
+  | <EQUALS : "=">
+  | <NOTEQUALS : "<>" | "!="> 
+
+}
+
+TOKEN : /*CONSTANTES*/
+{
+  < INTEIRO_LITERAL : (< DIGITO >)+ >
+  | < STRING_LITERAL : "'"(<LETRA>)*"'">
+  | < TRUEVALUE : "TRUE" >
+  | < FALSEVALUE : "FALSE" >
+}
+
+TOKEN : /*IDENTIFICADOR*/
+{
+  < IDENTIFICADOR : ( < LETRA > )(< LETRA > | "_" | < DIGITO >)*  >
+  | <DOT : ".">
+  | <COMMA : ",">
+}
+
+TOKEN :
+{
+	<MEIODAQUERY  :"|">
+}
+
+
+
+//Usar o padrao factory pra gerar Formulas com operator
+
+Formula atomicFormula():
+{
+	Formula af;
+	Token token1;
+	Token token2;
+	Token token3;
+	Token token4;
+	Token op;
+}
+{	
+	(
+		(
+			token1 = <IDENTIFICADOR> 
+			(	
+				<LPAREN> token2 = <IDENTIFICADOR> <RPAREN> 
+					{af = new AtomicFormulaIsA(token1.image, token2.image);}
+				
+				| <DOT> token2 = <IDENTIFICADOR> 
+						op = operator()
+				   	( 
+				   		token3 = <IDENTIFICADOR> <DOT> token4 = <IDENTIFICADOR> 
+				   			{ af = new AtomicFormulaAttOpAtt(op.image, new TupleProjection(token1.image, token2.image), new TupleProjection(token3.image, token4.image)); }
+				   	 	| (token3 = <INTEIRO_LITERAL> | token3 = <STRING_LITERAL>) 
+				   	 		{ af = new AtomicFormulaAttOpConst(op.image, new TupleProjection(token1.image, token2.image), new Constant(token3.image)); }
+				   	)
+			)	
+		)
+		
+		| (token1 = <INTEIRO_LITERAL> | token1 = <STRING_LITERAL>)
+			op = operator()
+			token2 = <IDENTIFICADOR> <DOT> token3 = <IDENTIFICADOR>
+			{ af = new AtomicFormulaAttOpConst(op.image, new TupleProjection(token2.image, token3.image), new Constant(token1.image)); }
+	)	
+	{return af;}
+}
+
+
+Token operator():
+{
+	Token op;
+}
+{
+	(
+		op = <LESSTHAN> 
+					| op = <GREATERTHAN> 
+					| op = <EQUALS>
+					| op = <LESSOREQUALTHAN>
+					| op = <GREATEROREQUALTHAN>
+					| op = <NOTEQUALS>
+	)
+	{return op;}
+}
+	
+List <TupleProjection> tupleProjectionList():
+{
+	List <TupleProjection> tpl = new ArrayList <TupleProjection>();
+	TupleProjection p;
+	Token token1;
+	Token token2;
+}
+{
+	
+	token1 = <IDENTIFICADOR> <DOT> token2 = <IDENTIFICADOR>
+	{p = new TupleProjection(token1.image, token2.image); tpl.add(p);}
+	(p = tupleProjectionListRest() {tpl.add(p);})*
+
+	{return tpl;}
+} 
+
+TupleProjection tupleProjectionListRest():
+{	
+	TupleProjection p;
+	Token token1;
+	Token token2;
+}
+{
+	<COMMA> token1 = <IDENTIFICADOR> <DOT> token2 = <IDENTIFICADOR>
+	{p = new TupleProjection(token1.image, token2.image); return p;} 
+}
+
+
+Formula formula():
+{
+	Formula f1;
+	Formula f2;
+}
+{	
+	f1 = andOrFormula()
+	(<ARROW> f2 = andOrFormula() {f1 = new Implication(f1, f2);})*
+	{return f1;}
+}
+
+
+
+Formula andOrFormula():
+{
+	Formula f1;
+ 	Formula f2;
+}
+{	
+	f1 = terminalFormula()
+	(
+		LOOKAHEAD(2)
+		(
+		  <OR> f2 = terminalFormula() {f1 = new Or(f1, f2);}
+			| <AND> f2 = terminalFormula() {f1 = new And(f1, f2);}
+			
+		)
+	)*
+
+	{return f1;}
+}
+
+Formula terminalFormula():
+{
+	Formula f;
+	Token token;
+}
+{
+	(
+		<NOT> <LPAREN> f = formula() <RPAREN> {f = new Not(f);}
+	
+		| f = atomicFormula()
+		| <LPAREN>
+			(
+				f = formula() {f = new InnerFormula(f);}<RPAREN>
+			 	| <FORALL> token = <IDENTIFICADOR> <RPAREN> <LPAREN> f = formula() <RPAREN> {f = new ForAll(token.image, f);}
+				| <EXISTS> token = <IDENTIFICADOR> <RPAREN> <LPAREN> f = formula() <RPAREN> {f = new Exists(token.image, f);}
+			)
+	)
+
+	{return f;} 
+}
+
+
+
+
+Query query():
+{
+	Query q;
+	Formula f;
+	List <TupleProjection> tpl;
+}
+{
+	<LBRACE>
+	 tpl = tupleProjectionList() <MEIODAQUERY> f = formula()
+	<RBRACE>
+	{	
+		return new Query(tpl, f);}
+}

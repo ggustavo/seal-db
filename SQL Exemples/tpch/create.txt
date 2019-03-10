@@ -1,0 +1,21 @@
+create database tpch;
+
+CREATE TABLE customer (custkey varchar, c_name varchar, c_address varchar, nationkey varchar, c_phone varchar, c_acctbal varchar, c_mktsegment varchar, c_comment varchar);
+
+
+CREATE TABLE lineitem (orderkey varchar, partkey varchar, suppkey varchar, l_linenumber varchar, l_quantity varchar, l_extendedprice varchar, l_discount varchar, l_tax varchar, l_returnflag varchar, l_linestatus varchar, l_shipdate varchar, l_commitdate varchar, l_receiptdate varchar, l_shipinstruct varchar, l_shipmode varchar, l_comment varchar);
+
+CREATE TABLE part (partkey varchar, p_name varchar, p_mfgr varchar, p_brand varchar, p_type varchar, p_size varchar, p_container varchar, p_retailprice varchar, p_comment varchar);
+
+CREATE TABLE nation (nationkey varchar, n_name varchar, regionkey varchar, n_comment varchar);
+
+CREATE TABLE partsupp (partkey varchar, suppkey varchar, ps_availqty varchar, ps_supplycost varchar, ps_comment varchar);
+
+CREATE TABLE supplier (suppkey varchar, s_name varchar, s_address varchar, nationkey varchar, s_phone varchar, s_acctbal varchar, s_comment varchar);
+
+CREATE TABLE order (orderkey varchar, custkey varchar, o_orderstatus varchar, o_totalprice varchar, o_orderdate varchar, o_orderpriority varchar, o_clerk varchar, o_shippriority varchar, o_comment varchar);
+
+CREATE TABLE region (regionkey varchar, r_name varchar, r_comment varchar);
+
+
+

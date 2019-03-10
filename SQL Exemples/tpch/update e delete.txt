@@ -1,0 +1,12 @@
+UPDATE part SET  
+	
+p_size = 4 
+	
+WHERE partkey = 2
+
+______________________________________________________________________________________
+
+
+DELETE from part
+
+WHERE partkey = 52;

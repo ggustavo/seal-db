@@ -1,0 +1,113 @@
+/**
+ * JavaCC template file created by SF JavaCC plugin 1.5.28+ wizard for JavaCC 1.5.0+
+ */
+
+/**
+* Definição da gramatica:
+* Query ::= LBRACE VarList BAR Formula RBRACE;
+*VarList ::= NAME | VarList COMMA NAME;
+*Formula ::= AtomicFormula |
+* Formula AND Formula |
+* Formula OR Formula |
+* NOT LPAREN Formula RPAREN |
+* LPAREN EXISTS VarList RPAREN LPAREN Formula RPAREN |
+* LPAREN FORALL VarList RPAREN LPAREN Formula RPAREN;
+*AtomicFormula ::=
+*NAME LPAREN ArgList RPAREN | Arg Comparison Arg;
+*ArgList ::= Arg | ArgList COMMA Arg;
+*Arg ::= NAME | STRING | NUMBER;
+*Comparison ::= < | <= | = | != | > | >= 
+* Está definição foi tirada do seguinte link: http://tinman.cs.gsu.edu/~raj/elna-lab/ch2/ch2.pdf
+*
+*The terminal strings in the grammar include
+*• Keywords for the logical operators: AND, OR, and NOT. These keywords are caseinsensitive.
+*• Quantifier keywords EXISTS and FORALL (case-insensitive).
+*• Miscellaneous syntactic character strings such as (, ), <, <=, =, <>, >, >=, and comma (,).
+*• NAME strings: used for named relations and variables (case-insensitive).
+*• Constant strings: STRING (a string enclosed within single quotes; e.g. ‘Thomas’) and
+*NUMBER (integer as well as decimal numbers; e.g. 232 and -36.1). 
+**/
+
+options
+{
+  static = true;
+}
+
+PARSER_BEGIN(DrcGrammar)
+package grammar;
+
+public class DrcGrammar
+{
+  public static void main(String args []) throws ParseException
+  {
+    DrcGrammar parser = new DrcGrammar(System.in);
+    parser.Query()
+ 	  //Program p = parser.program();   
+  }
+}
+
+PARSER_END(DrcGrammar)
+
+
+SKIP :
+{
+  " "
+  | "\r"
+  | "\r\n"
+  | "\t"
+  | "\n"
+}
+
+
+/* OPERADORES LOGICOS */
+TOKEN :
+{
+  <OR : "OR">
+  | <AND : "AND">
+  | <NOT : "NOT">
+}
+
+/*QUANTIFICADORES*/
+TOKEN :
+{
+  <EXISTS : "EXISTS">
+  | <FORALL : "FORALL">
+}
+
+/*COMPARADORES*/
+TOKEN :
+{
+  <LPAREN : "(">
+  | <RPAREN : ")">
+  | <LBRACE : "{">
+  | <RBRACE : "}">
+  | <LESSTHAN : "<">
+  | <LESSOREQUALTHAN : "<=">
+  | <GREATERTHAN : ">">
+  | <GREATEROREQUALTHAN : ">=">
+  | <EQUALS : "==">
+  | <NOTEQUALS : "<>" | "!="> 
+
+}
+
+
+
+TOKEN : /*IDENTIFICADOR*/
+{
+  < IDENTIFICADOR : ( < LETRA > )(< LETRA > | "_" | < DIGITO >)*  >
+}
+
+TOKEN : /*CONSTANTES*/
+{
+  < INTEIRO_LITERAL : (< DIGITO >)+ >
+  | < STRING_LITERAL : "'"(<LETRA>)*"'">
+  | < TRUEVALUE : "TRUE" >
+  | < FALSEVALUE : "FALSE" >
+}
+
+
+
+Query query():
+{}
+{}
+
