@@ -2,16 +2,17 @@ package DBMS.queryProcessing.queryEngine.planEngine.planOperations.selectCommand
 
 
 import DBMS.fileManager.Column;
-import DBMS.queryProcessing.ITable;
-import DBMS.queryProcessing.ITuple;
+import DBMS.queryProcessing.MTable;
+import DBMS.queryProcessing.Tuple;
+import DBMS.queryProcessing.queryEngine.AcquireLockException;
 import DBMS.queryProcessing.queryEngine.Plan;
 import DBMS.queryProcessing.queryEngine.InteratorsAlgorithms.TableScan;
 import DBMS.queryProcessing.queryEngine.planEngine.planOperations.AbstractPlanOperation;
-import DBMS.transactionManager.ITransaction;
+import DBMS.transactionManager.Transaction;
 
 public class IntersectionOperation extends AbstractPlanOperation{
 	
-	protected void executeOperation(ITable resultTable) {
+	protected void executeOperation(MTable resultTable) throws AcquireLockException {
 		
 		if(resultLeft.getColumnNames().length != resultRight.getColumnNames().length){
 			
@@ -20,7 +21,7 @@ public class IntersectionOperation extends AbstractPlanOperation{
 		}
 		
 		
-		ITransaction transaction = super.getPlan().getTransaction();
+		Transaction transaction = super.getPlan().getTransaction();
 
 		TableScan scanLeft = new TableScan(transaction, resultLeft);
 		
@@ -31,8 +32,8 @@ public class IntersectionOperation extends AbstractPlanOperation{
 		scanRight.reset();
 		
 		
-		ITuple tupleLeft = scanLeft.nextTuple();
-		ITuple tupleRight = scanRight.nextTuple();
+		Tuple tupleLeft = scanLeft.nextTuple();
+		Tuple tupleRight = scanRight.nextTuple();
 		
 		
 		while (tupleLeft != null) {

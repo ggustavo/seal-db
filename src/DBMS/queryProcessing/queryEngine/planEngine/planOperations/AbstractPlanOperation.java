@@ -7,8 +7,8 @@ import java.util.List;
 
 import DBMS.Kernel;
 import DBMS.fileManager.Column;
-import DBMS.queryProcessing.ITable;
-import DBMS.queryProcessing.TableManipulate;
+import DBMS.queryProcessing.MTable;
+import DBMS.queryProcessing.queryEngine.AcquireLockException;
 import DBMS.queryProcessing.queryEngine.Plan;
 import DBMS.queryProcessing.queryEngine.planEngine.Condition;
 import DBMS.queryProcessing.queryEngine.planEngine.planOperations.createCommands.CreateShemaOperation;
@@ -30,10 +30,10 @@ public abstract class AbstractPlanOperation{
 	protected AbstractPlanOperation father;
 	protected Plan plan;
 	protected String name;
-	protected ITable resultLeft;
-	protected ITable resultRight;
+	protected MTable resultLeft;
+	protected MTable resultRight;
 	protected List<Condition> attributesOperatorsValues;
-	protected ITable resultTable;
+	protected MTable resultTable;
 	
 	private static int STATIC_CODE = 0;
 	protected int code = 0;
@@ -44,13 +44,13 @@ public abstract class AbstractPlanOperation{
 	}
 	
 	public abstract Column[] getResultTupleStruct();
-	protected abstract void executeOperation(ITable resultTable);
+	protected abstract void executeOperation(MTable resultTable) throws AcquireLockException;
 
 	
-	public ITable execute(){
+	public MTable execute() throws AcquireLockException{
 		executeChildren();
+	
 		if(this instanceof DropTableOperation)return nonPersistentTableResultOperation();
-		if(this instanceof BackupTableOperation)return nonPersistentTableResultOperation();
 		if(this instanceof CreateTableOperation)return nonPersistentTableResultOperation();
 		if(this instanceof CreateShemaOperation)return nonPersistentTableResultOperation();
 		if(this instanceof InsertOperation)return nonPersistentTableResultOperation();
@@ -60,20 +60,27 @@ public abstract class AbstractPlanOperation{
 		if(this instanceof GroupResultsOperation) return groupResultsExecute();
 		if(this instanceof ProjectionOperation &&  (((ProjectionOperation)this).getAttributesProjected()==null ||((ProjectionOperation)this).getAttributesProjected().length==0))return resultLeft;
 
-		ITable resultTable =  TableManipulate.getTempInstance(getName(),Kernel.getCatalog().getSchemabyName(plan.getTransaction().getConnection().getSchemaName()),getResultTupleStruct());
+		MTable resultTable =  MTable.getTempInstance(getName(),getResultTupleStruct());
 		//LogError.save(this.getClass(),"New temp: " + resultTable.getName() + " id: " + resultTable.getTableID());
+		
 		executeOperation(resultTable);
 		this.resultTable = resultTable;
+		
+
 		return resultTable;
 		
 	}
 	
-	private ITable nonPersistentTableResultOperation(){
+	
+	
+	private MTable nonPersistentTableResultOperation() throws AcquireLockException{
+		
 		executeOperation(null);
+		
 		return null;
 	}
 	
-	private ITable subPlanResultResult(){
+	private MTable subPlanResultResult() throws AcquireLockException{
 		SubplanOperation sb = ((SubplanOperation)this);
 		
 		if(sb.getSubplan()!=null){
@@ -83,13 +90,15 @@ public abstract class AbstractPlanOperation{
 		return null;
 	}
 	
-	public ITable groupResultsExecute() {
+	public MTable groupResultsExecute() throws AcquireLockException {
+		
 		executeOperation(null);
+		
 		return resultLeft;
 	}
 	
 	
-	private void executeChildren(){
+	private void executeChildren() throws AcquireLockException{
 		//LogError.save(this.getClass(),"Operation: " + this.getClass().getName() + " " + left + " " + right);
 		if(left!=null){
 			setResultLeft(left.execute());
@@ -342,19 +351,19 @@ public abstract class AbstractPlanOperation{
 		this.plan = plan;
 	}
 
-	public ITable getResultLeft() {
+	public MTable getResultLeft() {
 		return resultLeft;
 	}
 
-	public void setResultLeft(ITable resultLeft) {
+	public void setResultLeft(MTable resultLeft) {
 		this.resultLeft = resultLeft;
 	}
 
-	public ITable getResultRight() {
+	public MTable getResultRight() {
 		return resultRight;
 	}
 
-	public void setResultRight(ITable resultRight) {
+	public void setResultRight(MTable resultRight) {
 		this.resultRight = resultRight;
 	}
 
@@ -384,11 +393,11 @@ public abstract class AbstractPlanOperation{
 		return getName();
 	}
 
-	public ITable getResultTable() {
+	public MTable getResultTable() {
 		return resultTable;
 	}
 
-	public void setResultTable(ITable resultTable) {
+	public void setResultTable(MTable resultTable) {
 		this.resultTable = resultTable;
 	}
 

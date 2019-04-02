@@ -4,30 +4,27 @@ import java.util.logging.Level;
 
 import DBMS.Kernel;
 import DBMS.fileManager.Column;
-import DBMS.fileManager.ObjectDatabaseId;
-import DBMS.queryProcessing.ITable;
-import DBMS.queryProcessing.ITuple;
-import DBMS.queryProcessing.TableManipulate;
+import DBMS.queryProcessing.MTable;
+import DBMS.queryProcessing.Tuple;
+import DBMS.queryProcessing.queryEngine.AcquireLockException;
 import DBMS.queryProcessing.queryEngine.InteratorsAlgorithms.TableScan;
 import DBMS.queryProcessing.queryEngine.planEngine.planOperations.AbstractPlanOperation;
-import DBMS.transactionManager.ITransaction;
+import DBMS.transactionManager.Transaction;
 
 public class DropTableOperation extends AbstractPlanOperation {
 	
 
-	protected void executeOperation(ITable resultTable) {
+	protected void executeOperation(MTable resultTable) throws AcquireLockException {
 		
-		ITransaction transaction = super.getPlan().getTransaction();
+		Transaction transaction = super.getPlan().getTransaction();
 		
 		TableScan tableScan = new TableScan(transaction, resultLeft);
 	
-		ITuple tuple = tableScan.nextTuple();
+		Tuple tuple = tableScan.nextTuple();
 		while (tuple != null) {
 
-			ObjectDatabaseId obj = new ObjectDatabaseId(String.valueOf(resultLeft.getSchemaManipulate().getId()),
-					String.valueOf(resultLeft.getTableID()), String.valueOf(tableScan.getAtualBlock()),
-					String.valueOf(tuple.getId()));
-			resultLeft.deleteTuple(transaction, obj);
+	
+			resultLeft.deleteTuple(transaction, tuple.getTupleID());
 
 			tuple = tableScan.nextTuple();
 
@@ -35,15 +32,13 @@ public class DropTableOperation extends AbstractPlanOperation {
 	//	Kernel.info(this.getClass(),resultLeft.getName() + " " + resultLeft.getTableID());
 		//Kernel.info(this.getClass(),resultLeft.getSchemaManipulate().getTables().toString());	
 		
-		ITable table = resultLeft.getSchemaManipulate().removeTable(resultLeft.getName());
+		MTable table = resultLeft.getSchemaManipulate().removeTable(resultLeft.getName());
 		//Kernel.info(this.getClass(),resultLeft.getSchemaManipulate().getTables());	
-		if(table.close()){
-			
-		}
-		//Kernel.info(this.getClass(),table.getPath());
-		Kernel.removeFile(table.getPath());
 		
-		Kernel.getCatalagInitializer().removeTable((TableManipulate) table);
+		//Kernel.info(this.getClass(),table.getPath());
+		//Kernel.removeFile(table.getPath());
+		
+		Kernel.getInitializer().removeTable(table);
 		
 		
 		plan.setOptionalMessage(table.getName() + " table removed");

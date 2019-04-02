@@ -1,6 +1,6 @@
 package DBMS.fileManager;
 
-import DBMS.queryProcessing.TableManipulate;
+import DBMS.queryProcessing.MTable;
 
 public class Column {
 	private int id;
@@ -59,7 +59,7 @@ public class Column {
 	}
 
 	public String toTuple() {
-		return id+TableManipulate.SEPARATOR+name+TableManipulate.SEPARATOR+type+TableManipulate.SEPARATOR+tableId;
+		return id+MTable.SEPARATOR+name+MTable.SEPARATOR+type+MTable.SEPARATOR+tableId;
 	}
 	
 	public Column copy(){

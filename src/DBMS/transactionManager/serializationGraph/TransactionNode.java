@@ -3,26 +3,26 @@ package DBMS.transactionManager.serializationGraph;
 import java.util.LinkedList;
 import java.util.List;
 
-import DBMS.transactionManager.ITransaction;
+import DBMS.transactionManager.Transaction;
 
 public class TransactionNode {
 	
 	private List<Edge> edgesIn;
 	private List<Edge> edgesOut;
-	private ITransaction transaction;
+	private Transaction transaction;
 	private boolean visited;
 
-	public TransactionNode(ITransaction transaction) {
+	public TransactionNode(Transaction transaction) {
 		super();
 		this.edgesIn = new LinkedList<>();
 		this.edgesOut = new LinkedList<>();
 		this.transaction = transaction;
 	}
 	
-	public ITransaction getTransaction() {
+	public Transaction getTransaction() {
 		return transaction;
 	}
-	public void setTransaction(ITransaction transaction) {
+	public void setTransaction(Transaction transaction) {
 		this.transaction = transaction;
 	}
 

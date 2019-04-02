@@ -2,8 +2,8 @@ package DBMS.queryProcessing.parse.statements;
 
 import java.sql.SQLException;
 
-import DBMS.fileManager.ISchema;
-import DBMS.queryProcessing.ITable;
+import DBMS.fileManager.Schema;
+import DBMS.queryProcessing.MTable;
 import DBMS.queryProcessing.queryEngine.Plan;
 import DBMS.queryProcessing.queryEngine.planEngine.planOperations.deleteCommands.DropTableOperation;
 import DBMS.queryProcessing.queryEngine.planEngine.planOperations.selectCommands.TableOperation;
@@ -18,15 +18,15 @@ public class DropTableStatementParse implements StatementParse{
 	}
 
 	@Override
-	public Plan parse(Statement statement, ISchema schema) throws SQLException {
+	public Plan parse(Statement statement, Schema schema) throws SQLException {
 		
 		Drop drop = (Drop)statement;
 		
 		
 		String name = drop.getName().getName();
-		ITable table = null;
+		MTable table = null;
 		
-		for (ITable t : schema.getTables()) {
+		for (MTable t : schema.getTables()) {
 			if(t.getName().equals(name)){
 				table = t;
 				break;

@@ -1,0 +1,138 @@
+
+
+CREATE TABLE customer
+(
+  c_id numeric,
+  c_d_id numeric,
+  c_w_id numeric,
+  c_first varchar,
+  c_middle varchar,
+  c_last varchar,
+  c_street_1 varchar,
+  c_street_2 varchar,
+  c_city varchar,
+  c_state varchar,
+  c_zip varchar,
+  c_phone varchar,
+  c_since varchar,
+  c_credit varchar,
+  c_credit_lim numeric,
+  c_discount numeric,
+  c_balance numeric,
+  c_ytd_payment numeric,
+  c_payment_cnt numeric,
+  c_delivery_cnt numeric,
+  c_data varchar
+);
+
+
+
+CREATE TABLE district
+(
+  d_id numeric,
+  d_w_id numeric,
+  d_ytd numeric,
+  d_tax numeric,
+  d_next_o_id numeric,
+  d_name varchar,
+  d_street_1 varchar,
+  d_street_2 varchar,
+  d_city varchar,
+  d_state varchar,
+  d_zip varchar
+);
+
+
+CREATE TABLE history
+(
+  h_c_id numeric,
+  h_c_d_id numeric,
+  h_c_w_id numeric,
+  h_d_id numeric,
+  h_w_id numeric,
+  h_date varchar,
+  h_amount numeric,
+  h_data varchar
+);
+
+CREATE TABLE item
+(
+  i_id numeric,
+  i_im_id numeric,
+  i_name varchar,
+  i_price numeric,
+  i_data varchar
+);
+
+
+
+CREATE TABLE new_order
+(
+  no_w_id numeric,
+  no_d_id numeric,
+  no_o_id numeric
+);
+
+CREATE TABLE order_line
+(
+  ol_w_id numeric,
+  ol_d_id numeric,
+  ol_o_id numeric,
+  ol_number numeric,
+  ol_i_id numeric,
+  ol_delivery_d varchar,
+  ol_amount numeric,
+  ol_supply_w_id numeric,
+  ol_quantity numeric,
+  ol_dist_info varchar
+);
+
+CREATE TABLE orders
+(
+  o_id numeric,
+  o_w_id numeric,
+  o_d_id numeric,
+  o_c_id numeric,
+  o_carrier_id numeric,
+  o_ol_cnt numeric,
+  o_all_local numeric,
+  o_entry_d varchar
+);
+
+
+
+CREATE TABLE stock
+(
+  s_i_id numeric,
+  s_w_id numeric,
+  s_quantity numeric,
+  s_dist_01 varchar,
+  s_dist_02 varchar,
+  s_dist_03 varchar,
+  s_dist_04 varchar,
+  s_dist_05 varchar,
+  s_dist_06 varchar,
+  s_dist_07 varchar,
+  s_dist_08 varchar,
+  s_dist_09 varchar,
+  s_dist_10 varchar,
+  s_ytd numeric,
+  s_order_cnt numeric,
+  s_remote_cnt numeric,
+  s_data varchar
+  
+);
+
+CREATE TABLE warehouse
+(
+  w_id numeric,
+  w_ytd numeric,
+  w_tax numeric,
+  w_name varchar,
+  w_street_1 varchar,
+  w_street_2 varchar,
+  w_city varchar,
+  w_state varchar,
+  w_zip varchar
+);
+ 

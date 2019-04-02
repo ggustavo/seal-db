@@ -1,13 +1,12 @@
 package DBMS.queryProcessing.queryEngine.planEngine.joinAlgorithms;
 
-import java.awt.Color;
 import java.math.BigInteger;
 
 import java.util.HashMap;
 
-import DBMS.queryProcessing.ITable;
-import DBMS.queryProcessing.ITuple;
-import DBMS.queryProcessing.queryEngine.InteratorsAlgorithms.BlockScan;
+import DBMS.queryProcessing.MTable;
+import DBMS.queryProcessing.Tuple;
+import DBMS.queryProcessing.queryEngine.AcquireLockException;
 import DBMS.queryProcessing.queryEngine.InteratorsAlgorithms.TableScan;
 
 
@@ -15,30 +14,27 @@ public class HashJoin extends AbstractJoinAlgorithm{
 	
 	private int numberOfBuckets;
 
-public void execute(ITable resultTable) {
+public void execute(MTable resultTable) throws AcquireLockException {
 		
 		TableScan tableScanLeft = new TableScan(transaction, tableLeft); // tabela r
 		TableScan tableScanRight = new TableScan(transaction, tableRight); // tabela s
 
-		BlockScan blockLeft = null;
-		BlockScan blockRight = null;
-		ITuple tupleRight = null;
-		ITuple tupleLeft = null;
+
+		Tuple tupleRight = null;
+		Tuple tupleLeft = null;
 				
 		tableScanLeft.reset();
 		tableScanRight.reset();
 		
-		blockLeft = tableScanLeft.nextBlock();
-		blockRight = tableScanRight.nextBlock() ;
+	
 		
-		if (blockLeft != null && blockRight != null){
-			showBlockLeft(blockLeft);
-			showBlockRight(blockRight);
-			tupleRight = blockRight.nextTuple();
-			tupleLeft = blockLeft.nextTuple();
-		}
+		tupleLeft = tableScanLeft.nextTuple();
+		tupleRight = tableScanRight.nextTuple();
+		
 
-		numberOfBuckets = Math.max(1, Math.max(tableLeft.getNumberOfBlocks(transaction), tableRight.getNumberOfBlocks(transaction)));
+	//	numberOfBuckets = Math.max(1, Math.max(tableLeft.getNumberOfBlocks(transaction), tableRight.getNumberOfBlocks(transaction)));
+		//TODO 
+		numberOfBuckets = 4;
 		
 		HashMap<String, Bucket> bucketMapLeft = new HashMap<String, Bucket>();
 		HashMap<String, Bucket> bucketMapRight = new HashMap<String, Bucket>();
@@ -51,8 +47,6 @@ public void execute(ITable resultTable) {
 		
 		//particionamento left-side
 			while ( tupleLeft != null) { 
-
-				showTupleLeft(tupleLeft);
 				
 				String hashID = hashString(tupleLeft.getColunmData(columnJoinLeft));
 				
@@ -60,25 +54,16 @@ public void execute(ITable resultTable) {
 					
 					Bucket bucket = bucketMapLeft.get(hashID);
 					bucket.add(tupleLeft);
-					showMatch(tupleLeft, bucket, Color.ORANGE);
+					
 				}else{
 					Bucket bucket = new Bucket(hashID,transaction,tableLeft.getColumns()); 
 					bucket.add(tupleLeft);
 					bucketMapLeft.put(hashID, bucket); 
-					showBucketLeft(bucket, numberOfBuckets, 40, hashID);
-					showMatch(tupleLeft, bucket, Color.ORANGE);
+					
 				}
 				
 				
-				tupleLeft = blockLeft.nextTuple();
-				if(tupleLeft==null){
-					eraseLeft();
-					blockLeft = tableScanLeft.nextBlock();
-					if(blockLeft!=null){
-						showBlockLeft(blockLeft);
-						tupleLeft = blockLeft.nextTuple();						
-					}
-				}
+				tupleLeft = tableScanLeft.nextTuple();
 			}
 
 			
@@ -87,33 +72,22 @@ public void execute(ITable resultTable) {
 			//particionamento right side
 			while (tupleRight != null) {
 
-				showTupleRight(tupleRight);
-				
 				String hashID = hashString(tupleRight.getColunmData(columnJoinRight));
 				
 				if(bucketMapRight.containsKey(hashID)){
 					
 					Bucket bucket = bucketMapRight.get(hashID);
 					bucket.add(tupleRight);
-					showMatch(tupleRight, bucket, Color.ORANGE);
+				
 				}else{
 					Bucket bucket = new Bucket(hashID,transaction,tableRight.getColumns()); 
 					bucket.add(tupleRight);
 					bucketMapRight.put(hashID, bucket); 
-					showBucketRight(bucket, numberOfBuckets, 40, hashID);
-					showMatch(tupleRight, bucket, Color.ORANGE);				
+								
 				}
 
-				tupleRight = blockRight.nextTuple();
-				if (tupleRight == null) {
-					eraseRight();
-					blockRight = tableScanRight.nextBlock();
-					if (blockRight != null) {
-						showBlockRight(blockRight);
-						tupleRight = blockRight.nextTuple();
-					}
-				}
-
+				tupleRight = tableScanRight.nextTuple();
+		
 			}
 		
 			
@@ -141,8 +115,7 @@ public void execute(ITable resultTable) {
 							if (match(tupleLeft, tupleRight)) {
 								
 								resultTable.writeTuple(transaction, tupleLeft.getStringData() + tupleRight.getStringData());
-							
-								showMatch(bucketLeft, bucketRight, Color.GREEN);
+								
 							}
 						
 						}
@@ -183,7 +156,6 @@ public void execute(ITable resultTable) {
 									
 									resultTable.writeTuple(transaction, tupleLeft.getStringData() + tupleRight.getStringData());
 								
-									showMatch(bucketLeft, bucketRight, Color.GREEN);
 								}
 							
 							}
@@ -209,10 +181,6 @@ public void execute(ITable resultTable) {
 	}
 	
 	
-
-	
-	
-
 	private boolean isNumeric(String number) {
 		try {
 			Double.parseDouble(number);

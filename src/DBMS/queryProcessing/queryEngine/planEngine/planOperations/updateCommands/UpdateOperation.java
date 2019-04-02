@@ -4,13 +4,13 @@ import java.util.logging.Level;
 
 import DBMS.Kernel;
 import DBMS.fileManager.Column;
-import DBMS.fileManager.ObjectDatabaseId;
-import DBMS.queryProcessing.ITable;
-import DBMS.queryProcessing.ITuple;
+import DBMS.queryProcessing.MTable;
+import DBMS.queryProcessing.Tuple;
+import DBMS.queryProcessing.queryEngine.AcquireLockException;
 import DBMS.queryProcessing.queryEngine.InteratorsAlgorithms.TableScan;
 import DBMS.queryProcessing.queryEngine.planEngine.Condition;
 import DBMS.queryProcessing.queryEngine.planEngine.planOperations.AbstractPlanOperation;
-import DBMS.transactionManager.ITransaction;
+import DBMS.transactionManager.Transaction;
 
 
 
@@ -20,9 +20,9 @@ public class UpdateOperation extends AbstractPlanOperation{
 	private String[] columnsUpdate;
 	private String[] columnsValues;
 	
-	protected void executeOperation(ITable resultTable) {
+	protected void executeOperation(MTable resultTable) throws AcquireLockException {
 		
-		ITransaction transaction = super.getPlan().getTransaction();
+		Transaction transaction = super.getPlan().getTransaction();
 		
 		boolean isUpdatable = false;
 		
@@ -30,7 +30,7 @@ public class UpdateOperation extends AbstractPlanOperation{
 		
 		int updateTuplesCount = 0;
 		
-		ITuple tuple = tableScan.nextTuple();
+		Tuple tuple = tableScan.nextTuple();
 		while(tuple!=null){
 			isUpdatable = false;
 			
@@ -46,22 +46,18 @@ public class UpdateOperation extends AbstractPlanOperation{
 			}
 			if(isUpdatable){
 				
-				String [] data = tuple.getData();
+				String [] data = tuple.getData().clone();
+				
 				for (int i = 0; i < columnsUpdate.length; i++) {
 				
 					data[resultLeft.getIdColumn(columnsUpdate[i])] = columnsValues[i];
 				}
-				tuple.setData(data);
-				
-				ObjectDatabaseId obj = new ObjectDatabaseId(
-						String.valueOf(resultLeft.getSchemaManipulate().getId()), 
-						String.valueOf(resultLeft.getTableID()), 
-						String.valueOf(tableScan.getAtualBlock()), 
-						String.valueOf(tuple.getId()));
-				if (resultLeft.updateTuple(transaction, tuple, obj) != null){
+			
+
+				if (resultLeft.updateTuple(transaction, data, tuple.getTupleID())){
 					updateTuplesCount++;
 				}else{
-					Kernel.log(this.getClass(),"Update exceeded block size",Level.SEVERE);					
+					Kernel.log(this.getClass(),"Update error",Level.SEVERE);					
 				}
 				
 			

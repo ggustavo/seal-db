@@ -3,7 +3,7 @@ package DBMS.queryProcessing.queryEngine.planEngine.planOperations.selectCommand
 import java.util.List;
 
 import DBMS.fileManager.Column;
-import DBMS.queryProcessing.ITable;
+import DBMS.queryProcessing.MTable;
 import DBMS.queryProcessing.queryEngine.planEngine.MultiResultOperation;
 import DBMS.queryProcessing.queryEngine.planEngine.planOperations.AbstractPlanOperation;
 
@@ -11,7 +11,7 @@ import DBMS.queryProcessing.queryEngine.planEngine.planOperations.AbstractPlanOp
 public class GroupResultsOperation extends AbstractPlanOperation implements MultiResultOperation{
 						
 
-	protected void executeOperation(ITable resultTable) {
+	protected void executeOperation(MTable resultTable) {
 		
 		//LogError.save(this.getClass(),getResults());
 	}
@@ -27,7 +27,7 @@ public class GroupResultsOperation extends AbstractPlanOperation implements Mult
 		
 	}
 
-	public List<ITable> getResults() {
+	public List<MTable> getResults() {
 		return MultiResultOperation.getResults(this);
 	}
 

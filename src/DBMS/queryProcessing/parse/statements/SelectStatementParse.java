@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.logging.Level;
 
 import DBMS.Kernel;
-import DBMS.fileManager.ISchema;
-import DBMS.queryProcessing.ITable;
+import DBMS.fileManager.Schema;
+import DBMS.queryProcessing.MTable;
 import DBMS.queryProcessing.parse.ParseVisitor;
 import DBMS.queryProcessing.queryEngine.Plan;
 import DBMS.queryProcessing.queryEngine.planEngine.Condition;
@@ -83,7 +83,7 @@ public class SelectStatementParse implements StatementParse{
 	
 	class TableNode{
 		LinkedList<String> alias;
-		ITable DBTable;
+		MTable DBTable;
 		LinkedList<JoinEdge> joinEdge;
 	
 		TableOperation tableOP;
@@ -98,7 +98,7 @@ public class SelectStatementParse implements StatementParse{
 		}
 		
 		
-		public TableNode(String alias_S, ITable dB_Table) {
+		public TableNode(String alias_S, MTable dB_Table) {
 			for (TableNode tableNode : tablesNodes) {
 				if(tableNode.DBTable == dB_Table ){
 					if(alias_S != null)tableNode.alias.add(alias_S.trim());
@@ -159,9 +159,9 @@ public class SelectStatementParse implements StatementParse{
 		
 	}
 	
-	//private  ISchema schema;
+	//private  SchemaManipulate schema;
 	
-	public Plan parse(Statement statement , ISchema schema)throws SQLException{
+	public Plan parse(Statement statement , Schema schema)throws SQLException{
 		//this.schema = schema;
 		Select select = (Select) statement;
 
@@ -584,7 +584,7 @@ public class SelectStatementParse implements StatementParse{
 	
 	private boolean errorTablesFinder = false;
 	
-	private void tablesFinder(Select select, ISchema schema) throws SQLException {
+	private void tablesFinder(Select select, Schema schema) throws SQLException {
 		errorTablesFinder = false;
 		PlainSelect plainSelect = null;
 	
@@ -603,7 +603,7 @@ public class SelectStatementParse implements StatementParse{
 			public void visit(Table arg0) {
 				String name = arg0.getName().trim();
 				String alias = arg0.getAlias() == null ? null : arg0.getAlias().toString().trim();			
-				ITable DB_Table = schema.getTableByName(name);
+				MTable DB_Table = schema.getTableByName(name);
 				if(DB_Table != null) {
 					new TableNode(alias,DB_Table);
 				}else {
@@ -626,7 +626,7 @@ public class SelectStatementParse implements StatementParse{
 				public void visit(Table arg0) {
 					String name = arg0.getName().trim();
 					String alias = arg0.getAlias() == null ? null : arg0.getAlias().toString().trim();			
-					ITable DB_Table = schema.getTableByName(name);
+					MTable DB_Table = schema.getTableByName(name);
 					if(DB_Table != null) {
 						new TableNode(alias,DB_Table);
 					}else {
@@ -734,7 +734,7 @@ public class SelectStatementParse implements StatementParse{
 			
 			public void run(Transaction transaction) {
 				p.setTransaction(transaction);
-				ITable temp = p.execute();
+				PointerTable temp = p.execute();
 				LogError.save(this.getClass(),p.getRoot().getName());
 				LogError.save(this.getClass(),temp.getNumberOfTuples(transaction));
 				

@@ -5,7 +5,7 @@ import java.util.logging.Level;
 
 import DBMS.Kernel;
 import DBMS.fileManager.Column;
-import DBMS.queryProcessing.ITable;
+import DBMS.queryProcessing.MTable;
 import DBMS.queryProcessing.queryEngine.Plan;
 import DBMS.queryProcessing.queryEngine.planEngine.MultiResultOperation;
 import DBMS.queryProcessing.queryEngine.planEngine.planOperations.AbstractPlanOperation;
@@ -17,7 +17,7 @@ public class SubplanOperation extends AbstractPlanOperation implements MultiResu
 	
 	private Plan subplan;
 	
-	protected void executeOperation(ITable resultTable) {
+	protected void executeOperation(MTable resultTable) {
 		
 	}
 	
@@ -66,7 +66,7 @@ public class SubplanOperation extends AbstractPlanOperation implements MultiResu
 	}
 
 	@Override
-	public List<ITable> getResults() {
+	public List<MTable> getResults() {
 		if(subplan==null){
 			Kernel.log(this.getClass(),"Subplan NULL",Level.SEVERE);
 			return null;

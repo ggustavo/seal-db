@@ -1,74 +1,56 @@
 package DBMS.queryProcessing.queryEngine.InteratorsAlgorithms;
 
-import DBMS.queryProcessing.ITable;
-import DBMS.queryProcessing.ITuple;
-import DBMS.transactionManager.ITransaction;
+
+import java.util.Iterator;
+
+import DBMS.queryProcessing.MTable;
+import DBMS.queryProcessing.Tuple;
+import DBMS.queryProcessing.queryEngine.AcquireLockException;
+import DBMS.transactionManager.Transaction;
 
 public class TableScan{
 
 	
-	private ITable table;
-	private int countTuples = -1;
-	private int countBlocks = 0;
-	private int atualTuple = -1;
-	private int numberOfBlocks;
-	private ITransaction transaction;
+	private MTable table;
+	private java.util.List<Tuple> tuples;
+	private Iterator<Tuple> interator;
 	
-	public TableScan (ITransaction transaction,ITable table){
+	private Transaction transaction;
+	
+	public TableScan (Transaction transaction, MTable table){
 		this.table = table;
 		this.transaction = transaction;
-		//table.update(transaction);
-		//LogError.save(this.getClass(),">> " +table.getNumberOfTuples());
-		numberOfBlocks = table.getNumberOfBlocks(transaction);
+		this.tuples = table.getTuples();
+		this.interator = tuples.iterator();
 	}
 	
 
 	public void reset(){
-		countTuples = -1;
-		countBlocks = 0;
-		atualTuple = -1;
+		interator = tuples.iterator();
 	}
-	
-	public boolean hasNextBlock(){
-		return countBlocks <= numberOfBlocks;
-	}
-	
-	public BlockScan nextBlock(){	
 		
-		return hasNextBlock() ? new BlockScan(transaction, table, countBlocks++) : null;
-	}
-	
-	public ITuple nextTuple() {
-		//LogError.save(this.getClass(),"CALL");
-		countTuples++;
-		ITuple tuple = table.getTuple(transaction,countBlocks+"-"+countTuples);
-		if(tuple==null){
-			countBlocks++;
-			countTuples = 0;
-		}else{
-			atualTuple++;
-			//LogError.save(this.getClass(),tuple.getData());
+	public Tuple nextTuple() throws AcquireLockException {
+		
+		if(interator.hasNext()) {
+			
+			String id = interator.next().getTupleID();
+			if(id == null)
+				return null;
+			
+			Tuple tuple = table.getTuple(transaction, id);
+			
+			if(tuple==null)
+				return null;
+			
+			
 			return tuple;
 		}
-		tuple = table.getTuple(transaction,countBlocks+"-"+countTuples);
-		if(tuple!=null)atualTuple++;
-		//if(tuple!=null)LogError.save(this.getClass(),tuple.getData());
-		if(tuple == null) {
-			//System.out.println("TERMINOU");
-			table.unloadCache(transaction);
-		}
-		return tuple;
+	
+		return null;
 	}
 
-	public int getAtualBlock() {
-		return countBlocks;
-	}
-	public int getAtualTuple() {
-		
-		return atualTuple;
-	}	
 	
-	public void setTransaction(ITransaction transaction){
+	public void setTransaction(Transaction transaction){
 		this.transaction = transaction;
 	}
 

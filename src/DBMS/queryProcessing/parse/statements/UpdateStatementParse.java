@@ -4,8 +4,8 @@ import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
 
-import DBMS.fileManager.ISchema;
-import DBMS.queryProcessing.ITable;
+import DBMS.fileManager.Schema;
+import DBMS.queryProcessing.MTable;
 import DBMS.queryProcessing.parse.ParseVisitor;
 import DBMS.queryProcessing.queryEngine.Plan;
 import DBMS.queryProcessing.queryEngine.planEngine.Condition;
@@ -24,13 +24,13 @@ public class UpdateStatementParse implements StatementParse{
 
 
 	
-	public Plan parse(Statement statement, ISchema schema) throws SQLException {
+	public Plan parse(Statement statement, Schema schema) throws SQLException {
 		
 		Update update = (Update)statement;
 
 		String name = update.getTables().get(0).getName();
 		
-		ITable table = schema.getTableByName(name);
+		MTable table = schema.getTableByName(name);
 		if(table==null)throw new SQLException(name+" not in the schema " + schema.getName());
 		
 		
@@ -75,7 +75,7 @@ public class UpdateStatementParse implements StatementParse{
 		
 	}
 	
-private List<Condition> whereParse(Update update, ITable table) throws SQLException {
+private List<Condition> whereParse(Update update, MTable table) throws SQLException {
 		
 		
 		if(update.getWhere()==null) return null;

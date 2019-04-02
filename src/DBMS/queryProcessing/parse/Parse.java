@@ -4,8 +4,7 @@ import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
 
-import DBMS.fileManager.ISchema;
-import DBMS.queryProcessing.parse.statements.BackupTableOperationStatementParse;
+import DBMS.fileManager.Schema;
 import DBMS.queryProcessing.parse.statements.CreateDatabaseStatementParse;
 import DBMS.queryProcessing.parse.statements.CreateTableStatementParse;
 import DBMS.queryProcessing.parse.statements.DeleteStatementParse;
@@ -38,11 +37,11 @@ public class Parse {
 		void newPlan(Plan plan);
 	}
 
-	public List<Plan> parse(String sql , ISchema schema)throws SQLException{
+	public List<Plan> parse(String sql , Schema schema)throws SQLException{
 		return parse(sql, schema,null);
 	}
 	
-	public Plan parseSQL(String sql , ISchema schema)throws SQLException{
+	public Plan parseSQL(String sql , Schema schema)throws SQLException{
 		return parse(sql, schema,null).get(0);
 	}
 	
@@ -50,13 +49,8 @@ public class Parse {
 		if(listener!= null)listener.newPlan(plan);
 	}
 	
-	public List<Plan> parse(String sql , ISchema schema, NewPlanListener listener)throws SQLException{
-		List<Plan> planList = backupDatabaseParse(sql, schema);
-		if(planList!=null){
-			callListener(planList.get(0), listener);
-			return planList;
-		}
-		planList = createDatabaseParse(sql, schema);
+	public List<Plan> parse(String sql , Schema schema, NewPlanListener listener)throws SQLException{
+		List<Plan> planList = createDatabaseParse(sql, schema);
 		if(planList!=null){
 			callListener(planList.get(0), listener);
 			return planList;
@@ -78,13 +72,7 @@ public class Parse {
 			callListener(plan, listener);
 			return planList;
 		}
-		if(compareStatement(sql, "rollback")){
-			plan = transactionActionParse(TransactionActionsOperation.ACTION_TRANSACTION_ROLLBACK,"Rollback transaction...");
-			planList.add(plan);
-			callListener(plan, listener);
-			return planList;
-		}
-		
+
 		Statements ss = null;
 		
 		try {
@@ -149,27 +137,8 @@ public class Parse {
 	
 	
 	
-	private List<Plan> backupDatabaseParse(String sql, ISchema schema) throws SQLException{
-		
-		String reservardWord = "backup table ";
-		
-		if(sql == null || reservardWord == null) return null;
-		
-	    for (int i = sql.length() - reservardWord.length(); i >= 0; i--) {
-	       
-	    	if (sql.regionMatches(true, i, reservardWord, 0, reservardWord.length())){
-	    		String value = sql.substring(reservardWord.length(), sql.length());
-	        	List<Plan> planList = new  LinkedList<>();
-	    		planList.add(new BackupTableOperationStatementParse().parse(value.trim().replace(";", ""),schema));
-	    		return planList;
-	        }
-	         
-	    }
-	    return null;
-		
-	}
 	
-	private List<Plan> createDatabaseParse(String sql, ISchema schema) throws SQLException{
+	private List<Plan> createDatabaseParse(String sql, Schema schema) throws SQLException{
 		
 		String reservardWord = "create database ";
 		
@@ -189,13 +158,13 @@ public class Parse {
 		
 	}
 	
-	public List<Plan> flushBufferParse(String sql, ISchema schema) throws SQLException{
+	public List<Plan> flushBufferParse(String sql, Schema schema) throws SQLException{
 		
 		return null;
 		
 	}
 	
-	public List<Plan> freeBufferParse(String sql, ISchema schema) throws SQLException{
+	public List<Plan> freeBufferParse(String sql, Schema schema) throws SQLException{
 		
 		return null;
 		

@@ -1,36 +1,65 @@
 package DBMS.transactionManager;
 
-import DBMS.fileManager.ObjectDatabaseId;
+import java.util.Arrays;
+
+import DBMS.queryProcessing.MTable;
+import DBMS.queryProcessing.Tuple;
 
 public class TransactionOperation {
 
-	public static final char READ_TRANSACTION = 'R';
-	public static final char WRITE_TRANSACTION = 'W';
+	public static final char READ_TUPLE = 'R';
+	public static final char WRITE_TUPLE = 'W';
 	public static final char ABORT_TRANSACTION = 'A';
 	public static final char COMMIT_TRANSACTION = 'C';
 	public static final char BEGIN_TRANSACTION = 'B';
 
-	private ObjectDatabaseId objectDatabaseId;
+	private Tuple tuple;
 	private char type;
-	private ITransaction transaction;
-	private byte[] beforeImage;
-	private byte[] afterImage;
+	private Transaction transaction;
+	private String[] beforedata;
+	private char tupleOperation;
 
-	public TransactionOperation(ITransaction transaction,ObjectDatabaseId idObject, char type) {
+	public TransactionOperation(Transaction transaction,Tuple tuple, char type) {
 		this.transaction = transaction;
-		this.objectDatabaseId = idObject;
+		this.tuple = tuple;
 		this.type = type;
 	}
 	
-	public String toString(){
-		return type+"("+objectDatabaseId+")";
+	@Override
+	public String toString() {
+		String op = "-- T("+transaction.getIdT()+") ["+type+"]" ;
+		
+			switch (tupleOperation) {
+			
+			case MTable.GET:
+				op+="\tGET";
+				break;
+			case MTable.UPDATE:
+				op+="\tUPDATE";
+				break;
+				
+			case MTable.INSERT:
+				op+="\tINSERT";
+				break;
+			
+	
+			case MTable.DELETE:
+				op+="\tDELETE";
+				break;
+				
+			default:
+				op+="";
+				break;
+			}
+				
+		return op +( tuple != null ? ("\tTuple("+tuple.getTupleID()+"): " + (tuple.getStringData()!=null?tuple.getStringData():"null") + (beforedata != null ? "--> before: " + Arrays.toString(beforedata) : "")) : "");
 	}
 	
-	public ITransaction getTransaction() {
+	public Transaction getTransaction() {
 		return transaction;
 	}
 
-	public void setTransaction(ITransaction transaction) {
+	public void setTransaction(Transaction transaction) {
 		this.transaction = transaction;
 	}
 
@@ -43,28 +72,28 @@ public class TransactionOperation {
 		this.type = type;
 	}
 
-	public ObjectDatabaseId getObjectDatabaseId() {
-		return objectDatabaseId;
+	public Tuple getTuple() {
+		return tuple;
 	}
 
-	public void setObjectDatabaseId(ObjectDatabaseId objectDatabaseId) {
-		this.objectDatabaseId = objectDatabaseId;
+	public void setTuple(Tuple tuple) {
+		this.tuple = tuple;
 	}
 
-	public byte[] getBeforeImage() {
-		return beforeImage;
+	public String[] getBeforedata() {
+		return beforedata;
 	}
 
-	public void setBeforeImage(byte[] beforeImage) {
-		this.beforeImage = beforeImage;
+	public void setBeforedata(String[] beforedata) {
+		this.beforedata = beforedata;
 	}
 
-	public byte[] getAfterImage() {
-		return afterImage;
+	public char getTupleOperation() {
+		return tupleOperation;
 	}
 
-	public void setAfterImage(byte[] afterImage) {
-		this.afterImage = afterImage;
+	public void seTupleOperation(char writeTupleOperation) {
+		this.tupleOperation = writeTupleOperation;
 	}
 	
 	

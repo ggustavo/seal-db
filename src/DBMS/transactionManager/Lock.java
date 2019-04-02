@@ -1,41 +1,31 @@
 package DBMS.transactionManager;
 
-import DBMS.fileManager.ObjectDatabaseId;
+import DBMS.queryProcessing.Tuple;
 
 public class Lock {
-		
-	
+
 	public static final char WRITE_LOCK = 'W';
 	public static final char READ_LOCK = 'R';
-	
-	private ObjectDatabaseId objectDatabaseId;
+
+	private Tuple tuple;
 	private char lockType;
-	private ITransaction transaction;
+	private Transaction transaction;
 	private boolean canceled;
-	
-	public Lock(ITransaction transaction,ObjectDatabaseId objectDatabaseId, char lockType){
-		this.objectDatabaseId = objectDatabaseId;
+
+	public Lock(Transaction transaction, Tuple TupleManipulate, char lockType) {
+		this.tuple = TupleManipulate;
 		this.lockType = lockType;
 		this.transaction = transaction;
 		canceled = false;
 	}
-	
-	
-	
-	
-	public ObjectDatabaseId getObjectDatabaseId() {
-		return objectDatabaseId;
+
+	public Tuple getTuple() {
+		return tuple;
 	}
 
-
-
-
-	public void setObjectDatabaseId(ObjectDatabaseId objectDatabaseId) {
-		this.objectDatabaseId = objectDatabaseId;
+	public void setTuple(Tuple TupleManipulate) {
+		this.tuple = TupleManipulate;
 	}
-
-
-
 
 	public char getLockType() {
 		return lockType;
@@ -45,30 +35,20 @@ public class Lock {
 		this.lockType = lockType;
 	}
 
-
-	public ITransaction getTransaction() {
+	public Transaction getTransaction() {
 		return transaction;
 	}
 
-
-	public void setTransaction(ITransaction transaction) {
+	public void setTransaction(Transaction transaction) {
 		this.transaction = transaction;
 	}
-
-
-
 
 	public boolean isCanceled() {
 		return canceled;
 	}
 
-
-
-
 	public void setCanceled(boolean canceled) {
 		this.canceled = canceled;
 	}
-	
-	
-	
+
 }

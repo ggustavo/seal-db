@@ -4,12 +4,13 @@ import java.util.LinkedList;
 import java.util.List;
 
 import DBMS.fileManager.Column;
-import DBMS.queryProcessing.ITable;
-import DBMS.queryProcessing.ITuple;
+import DBMS.queryProcessing.MTable;
+import DBMS.queryProcessing.Tuple;
+import DBMS.queryProcessing.queryEngine.AcquireLockException;
 import DBMS.queryProcessing.queryEngine.InteratorsAlgorithms.TableScan;
 import DBMS.queryProcessing.queryEngine.planEngine.Condition;
 import DBMS.queryProcessing.queryEngine.planEngine.planOperations.AbstractPlanOperation;
-import DBMS.transactionManager.ITransaction;
+import DBMS.transactionManager.Transaction;
 
 public class AggregationOperation extends AbstractPlanOperation {
 
@@ -26,17 +27,17 @@ public class AggregationOperation extends AbstractPlanOperation {
 	private Column[] projectedColumns;
 	
 	
-	protected void executeOperation(ITable resultTable) {
+	protected void executeOperation(MTable resultTable) throws AcquireLockException {
 
-		ITransaction transaction = super.getPlan().getTransaction();
+		Transaction transaction = super.getPlan().getTransaction();
 
 		TableScan tableScan = new TableScan(transaction, resultLeft);
 
 		List<MathAggregation> ma = getMatAggregations();
 
-		ITuple tuple = tableScan.nextTuple();
+		Tuple tuple = tableScan.nextTuple();
 
-		ITuple beforeTuple = null;
+		Tuple beforeTuple = null;
 
 		while (tuple != null) {
 
@@ -78,7 +79,7 @@ public class AggregationOperation extends AbstractPlanOperation {
 		return tuple;
 	}
 	
-	public boolean compareTuples(ITuple t1, ITuple t2) {
+	public boolean compareTuples(Tuple t1, Tuple t2) {
 		
 		for (Condition c : attributesOperatorsValues) {
 			int column = resultLeft.getIdColumn(c.getAtribute());
@@ -113,7 +114,7 @@ public class AggregationOperation extends AbstractPlanOperation {
 			reset();
 		}
 
-		void update(ITuple tuple) {
+		void update(Tuple tuple) {
 			count++;
 			int column = resultLeft.getIdColumn(aov.getAtribute());
 			String data = tuple.getColunmData(column);			

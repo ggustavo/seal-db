@@ -3,7 +3,7 @@ package DBMS.queryProcessing.queryEngine;
 import java.util.logging.Level;
 
 import DBMS.Kernel;
-import DBMS.queryProcessing.ITable;
+import DBMS.queryProcessing.MTable;
 import DBMS.queryProcessing.queryEngine.planEngine.planOperations.AbstractPlanOperation;
 import DBMS.queryProcessing.queryEngine.planEngine.planOperations.selectCommands.JoinOperation;
 import DBMS.queryProcessing.queryEngine.planEngine.planOperations.selectCommands.GroupResultsOperation;
@@ -11,13 +11,13 @@ import DBMS.queryProcessing.queryEngine.planEngine.planOperations.selectCommands
 import DBMS.queryProcessing.queryEngine.planEngine.planOperations.selectCommands.SubplanOperation;
 import DBMS.queryProcessing.queryEngine.planEngine.planOperations.selectCommands.TableOperation;
 import DBMS.queryProcessing.queryEngine.planEngine.planOperations.selectCommands.UnionOperation;
-import DBMS.transactionManager.ITransaction;
+import DBMS.transactionManager.Transaction;
 
 public class Plan {
 
 	private AbstractPlanOperation root;
 	private AbstractPlanOperation last;
-	private ITransaction transaction;
+	private Transaction transaction;
 	private int type = 0;
 	private String optionalMessage;                                 
 	
@@ -34,11 +34,11 @@ public class Plan {
 	
 	
 	
-	public Plan(ITransaction transaction) {
+	public Plan(Transaction transaction) {
 		this.transaction = transaction;
 	}
 
-	public ITable execute(){
+	public MTable execute() throws AcquireLockException{
 		return root.execute();
 	}
 	
@@ -151,14 +151,12 @@ public class Plan {
 			}
 		}
 	}
-	
-
-	public ITransaction getTransaction() {
+	public Transaction getTransaction() {
 		return transaction;
 	}
 
 
-	public void setTransaction(ITransaction transaction) {
+	public void setTransaction(Transaction transaction) {
 		this.transaction = transaction;
 	}
 	public AbstractPlanOperation getRoot() {

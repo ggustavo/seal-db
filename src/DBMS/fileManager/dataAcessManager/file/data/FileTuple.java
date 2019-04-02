@@ -2,7 +2,7 @@ package DBMS.fileManager.dataAcessManager.file.data;
 import java.util.LinkedList;
 
 import DBMS.fileManager.dataAcessManager.file.DataConvert;
-import DBMS.queryProcessing.TableManipulate;
+import DBMS.queryProcessing.MTable;
 
 public class FileTuple {
 	
@@ -56,7 +56,7 @@ public class FileTuple {
 	
 	public static FileTuple build(int tupleID,String s){
 		s = s.trim();
-		String sArray[] = s.split("\\"+TableManipulate.SEPARATOR);
+		String sArray[] = s.split("\\"+MTable.SEPARATOR);
 		LinkedList<byte[]> list = new LinkedList<>();
 		int size = FIRST_COLUMN_OFFSET;
 		for (int i = 0; i < sArray.length; i++) {
@@ -81,7 +81,7 @@ public class FileTuple {
 	
 	public String[] getData(){
 		
-		return toString().split("\\"+TableManipulate.SEPARATOR);
+		return toString().split("\\"+MTable.SEPARATOR);
 	}
 
 	public String toString(){
@@ -94,7 +94,7 @@ public class FileTuple {
 	
 			if(size==0)break;
 			offset+=4;
-			column += DataConvert.byteToString(DataConvert.readBytes(tuple, offset, size)).trim() + TableManipulate.SEPARATOR;;
+			column += DataConvert.byteToString(DataConvert.readBytes(tuple, offset, size)).trim() + MTable.SEPARATOR;;
 			offset+=size;
 		}	
 		return column;

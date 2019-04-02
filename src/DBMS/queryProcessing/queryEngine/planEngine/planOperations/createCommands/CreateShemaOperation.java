@@ -2,7 +2,7 @@ package DBMS.queryProcessing.queryEngine.planEngine.planOperations.createCommand
 
 import DBMS.Kernel;
 import DBMS.fileManager.Column;
-import DBMS.queryProcessing.ITable;
+import DBMS.queryProcessing.MTable;
 import DBMS.queryProcessing.queryEngine.planEngine.planOperations.AbstractPlanOperation;
 
 public class CreateShemaOperation extends AbstractPlanOperation{
@@ -15,10 +15,8 @@ public class CreateShemaOperation extends AbstractPlanOperation{
 	
 	
 	
-	protected void executeOperation(ITable resultTable) {
-//		String path = Kernel.createDirectory(Kernel.SCHEMAS_FOLDER+File.separator+schemaName);
-//		Kernel.getCatalog().addShema(new SchemaManipulate(schemaName, path));	
-		Kernel.getCatalagInitializer().createSchema(schemaName);
+	protected void executeOperation(MTable resultTable) {	
+		Kernel.getInitializer().createSchema(schemaName, plan.getTransaction());
 		
 		plan.setOptionalMessage(schemaName +" schema added");
 	}

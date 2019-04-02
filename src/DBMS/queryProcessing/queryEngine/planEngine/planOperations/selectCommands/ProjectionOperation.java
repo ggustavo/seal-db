@@ -7,12 +7,13 @@ import java.util.logging.Level;
 
 import DBMS.Kernel;
 import DBMS.fileManager.Column;
-import DBMS.queryProcessing.ITable;
-import DBMS.queryProcessing.ITuple;
+import DBMS.queryProcessing.MTable;
+import DBMS.queryProcessing.Tuple;
+import DBMS.queryProcessing.queryEngine.AcquireLockException;
 import DBMS.queryProcessing.queryEngine.Plan;
 import DBMS.queryProcessing.queryEngine.InteratorsAlgorithms.TableScan;
 import DBMS.queryProcessing.queryEngine.planEngine.planOperations.AbstractPlanOperation;
-import DBMS.transactionManager.ITransaction;
+import DBMS.transactionManager.Transaction;
 
 
 public class ProjectionOperation extends AbstractPlanOperation {
@@ -64,7 +65,7 @@ public class ProjectionOperation extends AbstractPlanOperation {
 		//LogError.save(this.getClass(),"NEWH " + newHeader.toString());
 	}
 	
-	public String projectTuple(ITuple tuple){
+	public String projectTuple(Tuple tuple){
 		StringBuffer tupleString = new StringBuffer();
 		for (Integer id : dataIDs) {
 			tupleString.append(tuple.getColunmData(id));
@@ -75,13 +76,13 @@ public class ProjectionOperation extends AbstractPlanOperation {
 	
 	
 	
-	protected void executeOperation(ITable resultTable) {
+	protected void executeOperation(MTable resultTable) throws AcquireLockException {
 		if (dataIDs.isEmpty())Kernel.log(this.getClass(),"dataIDs is Empty ",Level.SEVERE);
-		ITransaction transaction = super.getPlan().getTransaction();
+		Transaction transaction = super.getPlan().getTransaction();
 
 		TableScan tableScan = new TableScan(transaction, resultLeft);
 
-		ITuple tuple = tableScan.nextTuple();
+		Tuple tuple = tableScan.nextTuple();
 
 		while (tuple != null) {
 			

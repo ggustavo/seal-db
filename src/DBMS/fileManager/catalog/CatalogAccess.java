@@ -4,51 +4,79 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import DBMS.fileManager.ISchema;
+import DBMS.fileManager.Schema;
+import DBMS.queryProcessing.MTable;
 
-public class CatalogAccess implements ICatalog {
+public class CatalogAccess {
 
-	private HashMap<String,ISchema> schemaMap;
-	private ISchema defaultSchema;
+	private HashMap<String,Schema> schemaMap;
+	private Schema defaultSchema;
+	private Schema tempSchema;
 
-	public HashMap<String, ISchema> getSchemaMap() {
+	public HashMap<String, Schema> getSchemaMap() {
 		return schemaMap;
 	}
 
 	public CatalogAccess(){
-		schemaMap = new HashMap<String,ISchema>();
+		schemaMap = new HashMap<String,Schema>();
 	}
 		
-	public void addShema(ISchema s){
+	public void addShema(Schema s){
 		schemaMap.put(s.getName()+"", s);
 	}
 	
-	public String getSchemaPath(String s){	
-		return schemaMap.get(s).getPath();
+	public void removeShema(Schema s){
+		schemaMap.remove(s.getName());
 	}
 	
-	public ISchema getSchemabyName(String s){	
+	public void removeShema(String s){
+		schemaMap.remove(s);
+	}
+	
+	public Schema getSchemabyName(String s){	
 		return schemaMap.get(s);
 	}
-	public ISchema getSchemabyId(String s){	
-		for (ISchema schema : getShemas()) {
+	public Schema getSchemabyId(String s){	
+		for (Schema schema : getShemas()) {
 			if(String.valueOf(schema.getId()).equals(s))return schema;
 		}
 		return null;
 	}
 	
-	public List<ISchema> getShemas(){
-		return new ArrayList<ISchema>(schemaMap.values());
+	public List<Schema> getShemas(){
+		return new ArrayList<Schema>(schemaMap.values());
 	}
 
-	public ISchema getDefaultSchema() {
+	public Schema getDefaultSchema() {
 		return defaultSchema;
 	}
 
-	public void setDefaultSchema(ISchema s) {
+	public void setDefaultSchema(Schema s) {
 		schemaMap.put(s.getName()+"", s);
 		this.defaultSchema = s;
 	}
+
+
+	public Schema getTempSchema() {
+		return tempSchema;
+	}
+
+	public void setTempSchema(Schema s) {
+		schemaMap.put(s.getName()+"", s);
+		this.tempSchema = s;	
+	}
 	
-	
+	public String show(){
+		String buffer = "";
+		
+		for (Schema schema : getShemas()) {
+			buffer+=("Schema: " + schema.getName())+"\n";
+			
+			for (MTable table : schema.getTables()) {
+				buffer+=("\tTable: " + table.getControlTupleString())+"\n";				
+			}
+		}
+		
+		return buffer;
+	}
 }

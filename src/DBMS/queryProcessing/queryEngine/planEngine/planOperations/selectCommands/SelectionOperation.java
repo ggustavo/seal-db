@@ -1,27 +1,28 @@
 package DBMS.queryProcessing.queryEngine.planEngine.planOperations.selectCommands;
 
 import DBMS.fileManager.Column;
-import DBMS.queryProcessing.ITable;
-import DBMS.queryProcessing.ITuple;
+import DBMS.queryProcessing.MTable;
+import DBMS.queryProcessing.Tuple;
+import DBMS.queryProcessing.queryEngine.AcquireLockException;
 import DBMS.queryProcessing.queryEngine.InteratorsAlgorithms.TableScan;
 import DBMS.queryProcessing.queryEngine.planEngine.Condition;
 import DBMS.queryProcessing.queryEngine.planEngine.planOperations.AbstractPlanOperation;
-import DBMS.transactionManager.ITransaction;
+import DBMS.transactionManager.Transaction;
 
 
 public class SelectionOperation extends AbstractPlanOperation{
 
 	
-	protected void executeOperation(ITable resultTable) {
+	protected void executeOperation(MTable resultTable) throws AcquireLockException {
 		
-		ITransaction transaction = super.getPlan().getTransaction();
+		Transaction transaction = super.getPlan().getTransaction();
 		
 		boolean isInsertable = false;
 		
 		TableScan tableScan = new TableScan(transaction, resultLeft);
 		
 		
-		ITuple tuple = tableScan.nextTuple();
+		Tuple tuple = tableScan.nextTuple();
 		while(tuple!=null){
 			isInsertable = false;
 			

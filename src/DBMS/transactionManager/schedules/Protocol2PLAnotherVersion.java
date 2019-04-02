@@ -6,24 +6,23 @@ import java.util.logging.Level;
 
 import DBMS.Kernel;
 
-import DBMS.fileManager.ObjectDatabaseId;
-import DBMS.transactionManager.ITransaction;
+import DBMS.queryProcessing.Tuple;
+import DBMS.transactionManager.Transaction;
 import DBMS.transactionManager.Lock;
 import DBMS.transactionManager.LockManager;
-import DBMS.transactionManager.TransactionManagerListener;
 import DBMS.transactionManager.TransactionOperation;
 
 public class Protocol2PLAnotherVersion extends AbstractScheduler{
 
 	
-	public  void unlockAll(ITransaction transaction){
+	public  void unlockAll(Transaction transaction){
 		
 
 		List<Lock> locks = transaction.getLockList();
-		TransactionManagerListener tl = Kernel.getTransactionManagerListener();
+	
 		
 		for (Lock lock : locks) {
-			LockManager lockManager = lockMap.get(lock.getObjectDatabaseId());
+			LockManager lockManager = lockMap.get(lock.getTuple());
 			if(lockManager!=null){
 				
 				List<Lock> lockList = lockManager.getLockList();
@@ -31,8 +30,8 @@ public class Protocol2PLAnotherVersion extends AbstractScheduler{
 				lockList.remove(lock);
 				lockWaitList.remove(lock);
 				if(lockList.isEmpty() && lockWaitList.isEmpty()){
-					lockMap.remove(lock.getObjectDatabaseId());
-					if(tl!=null)tl.unLock(lock);
+					lockMap.remove(lock.getTuple());
+					
 				}
 				
 			}
@@ -43,14 +42,14 @@ public class Protocol2PLAnotherVersion extends AbstractScheduler{
 	}
 	
 	
-	public Lock requestLock(ITransaction transaction, TransactionOperation transactionOperation) throws InterruptedException{
+	public Lock requestLock(Transaction transaction, TransactionOperation transactionOperation) throws InterruptedException{
 		
 	//	print();
 		Lock newLock = createLock(transaction,transactionOperation);
 		
-		if(lockMap.containsKey(newLock.getObjectDatabaseId())){
+		if(lockMap.containsKey(newLock.getTuple())){
 			
-			LockManager lockManager = lockMap.get(newLock.getObjectDatabaseId());
+			LockManager lockManager = lockMap.get(newLock.getTuple());
 			List<Lock> lockList = lockManager.getLockList();
 			List<Lock> lockWaitList = lockManager.getLockWaitList();
 			Lock lockSameTransaction = null;
@@ -101,7 +100,7 @@ public class Protocol2PLAnotherVersion extends AbstractScheduler{
 			
 			List<Lock> lockList = new LinkedList<>();
 			lockList.add(newLock);
-			lockMap.put(newLock.getObjectDatabaseId(), new LockManager(lockList, new LinkedList<>()));	
+			lockMap.put(newLock.getTuple(), new LockManager(lockList, new LinkedList<>()));	
 			
 			
 		}
@@ -129,18 +128,15 @@ public class Protocol2PLAnotherVersion extends AbstractScheduler{
 	private void lockSameTransaction(Lock newLock, Lock lockSameTransaction){
 		if(newLock.getLockType() == Lock.WRITE_LOCK){
 			lockSameTransaction.setLockType(Lock.WRITE_LOCK);
-			
-			if(Kernel.getTransactionManagerListener()!=null){
-				Kernel.getTransactionManagerListener().updateLock(newLock);
-			}
+		
 		}
 	}
 	
 	
-	public void waitTransaction(ITransaction transaction) throws InterruptedException{
+	public void waitTransaction(Transaction transaction) throws InterruptedException{
 	
 			synchronized (transaction.getThread()) {
-				transaction.setState(ITransaction.WAIT);
+				transaction.setState(Transaction.WAIT);
 				transaction.getThread().wait();						
 			}
 			
@@ -149,7 +145,7 @@ public class Protocol2PLAnotherVersion extends AbstractScheduler{
 
 
 	@Override
-	public void unlock(ObjectDatabaseId objectDatabaseId) {
+	public void unlock(Tuple tuple) {
 		// TODO Auto-generated method stub
 		
 	}

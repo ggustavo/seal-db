@@ -4,23 +4,23 @@ import java.util.LinkedList;
 import java.util.List;
 
 
-import DBMS.queryProcessing.ITable;
+import DBMS.queryProcessing.MTable;
 import DBMS.queryProcessing.queryEngine.planEngine.planOperations.AbstractPlanOperation;
 
 public interface MultiResultOperation {
 	
-	List<ITable> getResults();
+	List<MTable> getResults();
 	List<AbstractPlanOperation> getOperationsResults();
 	
 	
-	public static List<ITable> getResults(AbstractPlanOperation operation){
-		List<ITable> results = new LinkedList<ITable>();
+	public static List<MTable> getResults(AbstractPlanOperation operation){
+		List<MTable> results = new LinkedList<MTable>();
 			if(operation==null)return results;
 			
 			
 			if(operation.getLeft() != null) {
 				if(operation.getLeft() instanceof MultiResultOperation) {
-					List<ITable> leftResults = ((MultiResultOperation) operation.getLeft()).getResults();
+					List<MTable> leftResults = ((MultiResultOperation) operation.getLeft()).getResults();
 					if(leftResults!=null)results.addAll(leftResults);
 				}else {
 					if(operation.getResultLeft() != null)results.add(operation.getResultLeft());					
@@ -30,7 +30,7 @@ public interface MultiResultOperation {
 	
 			if(operation.getRight()!=null) {
 				if(operation.getRight() instanceof MultiResultOperation) {
-					List<ITable> rightResults = ((MultiResultOperation) operation.getRight()).getResults();
+					List<MTable> rightResults = ((MultiResultOperation) operation.getRight()).getResults();
 					if(rightResults!=null)results.addAll(rightResults);					
 				}else {
 					if(operation.getResultRight() != null) results.add(operation.getResultRight());

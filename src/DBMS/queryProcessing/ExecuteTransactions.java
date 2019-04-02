@@ -1,8 +1,6 @@
 package DBMS.queryProcessing;
 
-
-import DBMS.connectionManager.DBConnection;
-import DBMS.transactionManager.ITransaction;
+import DBMS.transactionManager.Transaction;
 import DBMS.transactionManager.TransactionRunnable;
 
 public class ExecuteTransactions {
@@ -14,28 +12,28 @@ public class ExecuteTransactions {
 	private AllTransactionErrorsListener allTransactionErrorsListener;
 	
 
-	public ITransaction execute(DBConnection connection,TransactionRunnable tr){
-		ITransaction t = ITransaction.getNewInstance(connection,true,true);
+	public Transaction execute(TransactionRunnable tr){
+		Transaction t = Transaction.getNewInstance(true,true);
 		t.execRunnable(tr);
 		return t;
 	}
 	
-	public ITransaction execute(DBConnection connection,TransactionRunnable tr,boolean recoverable,boolean schedulable){
-		ITransaction t = ITransaction.getNewInstance(connection,recoverable,schedulable);
+	public Transaction execute(TransactionRunnable tr,boolean recoverable,boolean schedulable){
+		Transaction t = Transaction.getNewInstance(recoverable,schedulable);
 		t.execRunnable(tr);
 		return t;
 	}
 	
-	public ITransaction begin(DBConnection connection){
-		return begin(connection,true);
+	public Transaction begin(){
+		return begin(true);
 	}
 	
-	public ITransaction begin(DBConnection connection, boolean recoverable){
-		ITransaction t = ITransaction.getNewInstance(connection,recoverable,true);
+	public Transaction begin(boolean recoverable){
+		Transaction t = Transaction.getNewInstance(recoverable,true);
 		return t;
 	}
-	public ITransaction begin(DBConnection connection, boolean recoverable,boolean schedulable){
-		ITransaction t = ITransaction.getNewInstance(connection,recoverable,schedulable);
+	public Transaction begin(boolean recoverable,boolean schedulable){
+		Transaction t = Transaction.getNewInstance(recoverable,schedulable);
 		return t;
 	}
 	
@@ -49,7 +47,7 @@ public class ExecuteTransactions {
 	}
 
 	public static interface AllTransactionErrorsListener{
-		void onFail(ITransaction transaction, Exception e);
+		void onFail(Transaction transaction, Exception e);
 	}
 	
 }

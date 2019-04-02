@@ -1,7 +1,7 @@
 package DBMS.queryProcessing.queryEngine.planEngine.planOperations.selectCommands;
 
 import DBMS.fileManager.Column;
-import DBMS.queryProcessing.ITable;
+import DBMS.queryProcessing.MTable;
 import DBMS.queryProcessing.queryEngine.planEngine.planOperations.AbstractPlanOperation;
 
 public class TableOperation extends AbstractPlanOperation{
@@ -9,7 +9,7 @@ public class TableOperation extends AbstractPlanOperation{
 	
 	
 
-	protected void executeOperation(ITable resultTable) {
+	protected void executeOperation(MTable resultTable) {
 	
 
 	}
@@ -33,7 +33,7 @@ public class TableOperation extends AbstractPlanOperation{
 	}
 	
 	
-	public ITable getResultTable() {
+	public MTable getResultTable() {
 		return resultLeft;
 	}
 

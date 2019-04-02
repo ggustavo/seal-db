@@ -1,26 +1,24 @@
 package DBMS.queryProcessing.queryEngine.planEngine.joinAlgorithms;
 
-
-import DBMS.Kernel;
 import DBMS.fileManager.Column;
-import DBMS.queryProcessing.ITable;
-import DBMS.queryProcessing.ITuple;
-import DBMS.queryProcessing.TableManipulate;
-import DBMS.transactionManager.ITransaction;
+import DBMS.queryProcessing.MTable;
+import DBMS.queryProcessing.Tuple;
+import DBMS.queryProcessing.queryEngine.AcquireLockException;
+import DBMS.transactionManager.Transaction;
 
 public class Bucket{
 		private String id;
-		private ITable table;
-		private ITransaction transaction;
+		private MTable table;
+		private Transaction transaction;
 		
-		public Bucket(String id,ITransaction transaction, Column... columns) {
+		public Bucket(String id,Transaction transaction, Column... columns) {
 			this.transaction = transaction;
-			this.table = TableManipulate.getTempInstance("Bucket"+hashCode()+ "("+id+")", Kernel.getCatalog().getSchemabyName(transaction.getConnection().getSchemaName()),columns);
+			this.table = MTable.getTempInstance("Bucket"+hashCode()+ "("+id+")",columns);
 			this.id = id;
 		}
 		
 		
-		public void add(ITuple tuple){
+		public void add(Tuple tuple) throws AcquireLockException{
 			table.writeTuple(transaction, tuple.getStringData());
 		}
 		public String getId() {
@@ -29,10 +27,10 @@ public class Bucket{
 		public void setId(String id) {
 			this.id = id;
 		}
-		public ITable getTable() {
+		public MTable getTable() {
 			return table;
 		}
-		public void setTable(ITable table) {
+		public void setTable(MTable table) {
 			this.table = table;
 		}
 		

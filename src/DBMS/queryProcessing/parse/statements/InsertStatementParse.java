@@ -4,8 +4,8 @@ import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
 
-import DBMS.fileManager.ISchema;
-import DBMS.queryProcessing.ITable;
+import DBMS.fileManager.Schema;
+import DBMS.queryProcessing.MTable;
 import DBMS.queryProcessing.queryEngine.Plan;
 import DBMS.queryProcessing.queryEngine.planEngine.planOperations.insertCommands.InsertOperation;
 import DBMS.queryProcessing.queryEngine.planEngine.planOperations.selectCommands.TableOperation;
@@ -24,11 +24,11 @@ public class InsertStatementParse implements StatementParse{
 
 
 	
-	public Plan parse(Statement statement, ISchema schema) throws SQLException {
+	public Plan parse(Statement statement, Schema schema) throws SQLException {
 		Insert insert = (Insert)statement;
 
 
-		ITable table = schema.getTableByName(insert.getTable().getName());
+		MTable table = schema.getTableByName(insert.getTable().getName());
 		if(table==null)throw new SQLException(insert.getTable().getName()+" not in the schema " + schema.getName());
 		
 		

@@ -3,8 +3,8 @@ import java.util.logging.Level;
 
 import DBMS.Kernel;
 import DBMS.fileManager.Column;
-import DBMS.queryProcessing.ITable;
-import DBMS.transactionManager.ITransaction;
+import DBMS.queryProcessing.MTable;
+import DBMS.transactionManager.Transaction;
 
 
 
@@ -12,13 +12,12 @@ public class TransactionActionsOperation extends AbstractPlanOperation {
 	
 	public static final char ACTION_TRANSACTION_ABORT = 'A';
 	public static final char ACTION_TRANSACTION_COMMIT = 'C';
-	public static final char ACTION_TRANSACTION_ROLLBACK = 'R';
 	
 	private char action;
 	
-	protected void executeOperation(ITable resultTable) {
+	protected void executeOperation(MTable resultTable) {
 	
-		ITransaction t = plan.getTransaction();
+		Transaction t = plan.getTransaction();
 		
 		switch (action) {
 		case ACTION_TRANSACTION_ABORT:
@@ -28,11 +27,7 @@ public class TransactionActionsOperation extends AbstractPlanOperation {
 		case ACTION_TRANSACTION_COMMIT:
 			t.commit();
 			break;
-			
-		case ACTION_TRANSACTION_ROLLBACK:
-			t.rollback();
-			break;
-			
+				
 		default:
 			Kernel.log(this.getClass(),"Invalid transaction action: " + action,Level.SEVERE);
 			break;

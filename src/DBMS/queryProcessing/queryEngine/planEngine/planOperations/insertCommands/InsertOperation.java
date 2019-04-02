@@ -3,8 +3,8 @@ package DBMS.queryProcessing.queryEngine.planEngine.planOperations.insertCommand
 import java.util.LinkedList;
 
 import DBMS.fileManager.Column;
-import DBMS.queryProcessing.ITable;
-import DBMS.queryProcessing.TableManipulate;
+import DBMS.queryProcessing.MTable;
+import DBMS.queryProcessing.queryEngine.AcquireLockException;
 import DBMS.queryProcessing.queryEngine.planEngine.planOperations.AbstractPlanOperation;
 
 public class InsertOperation extends AbstractPlanOperation{
@@ -14,8 +14,8 @@ public class InsertOperation extends AbstractPlanOperation{
 	private LinkedList<String[]> values;
 	
 	@Override
-	protected void executeOperation(ITable resultTable) {
-		ITable table = resultLeft;
+	protected void executeOperation(MTable resultTable) throws AcquireLockException {
+		MTable table = resultLeft;
 		
 	
 		for (String[] v : values) {
@@ -29,7 +29,7 @@ public class InsertOperation extends AbstractPlanOperation{
 			}
 		
 	
-			table.writeTuple(plan.getTransaction(), TableManipulate.arrayToString(data));
+			table.writeTuple(plan.getTransaction(), MTable.arrayToString(data));
 		
 		}
 		plan.setOptionalMessage(values.size()+ " records inserted");

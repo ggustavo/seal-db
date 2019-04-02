@@ -1,7 +1,8 @@
 package DBMS.queryProcessing.queryEngine.planEngine.planOperations.selectCommands;
 
 import DBMS.fileManager.Column;
-import DBMS.queryProcessing.ITable;
+import DBMS.queryProcessing.MTable;
+import DBMS.queryProcessing.queryEngine.AcquireLockException;
 import DBMS.queryProcessing.queryEngine.Plan;
 import DBMS.queryProcessing.queryEngine.planEngine.joinAlgorithms.AbstractJoinAlgorithm;
 import DBMS.queryProcessing.queryEngine.planEngine.joinAlgorithms.BlockNestedLoopJoin;
@@ -13,7 +14,7 @@ public class JoinOperation extends AbstractPlanOperation{
 	
 	private AbstractJoinAlgorithm joinAlgorithm;
 
-	protected void executeOperation(ITable resultTable) {
+	protected void executeOperation(MTable resultTable) throws AcquireLockException {
 		if(joinAlgorithm==null){
 		//	LogError.save(this.getClass(),"[ERR0] No algorithm was informed");
 			joinAlgorithm = new BlockNestedLoopJoin();
@@ -22,7 +23,6 @@ public class JoinOperation extends AbstractPlanOperation{
 		joinAlgorithm.setTableLeft(resultLeft);
 		joinAlgorithm.setTableRight(resultRight);
 		joinAlgorithm.setAttributesOperatorsValues(attributesOperatorsValues);
-		if(joinAlgorithm.getiJoinAlgotithmListener()!=null)joinAlgorithm.getiJoinAlgotithmListener().initialize();
 		joinAlgorithm.execute(resultTable);
 	}
 	

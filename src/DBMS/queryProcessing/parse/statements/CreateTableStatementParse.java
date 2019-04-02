@@ -3,8 +3,8 @@ package DBMS.queryProcessing.parse.statements;
 import java.sql.SQLException;
 import java.util.LinkedList;
 
-import DBMS.fileManager.ISchema;
-import DBMS.queryProcessing.ITable;
+import DBMS.fileManager.Schema;
+import DBMS.queryProcessing.MTable;
 import DBMS.queryProcessing.queryEngine.Plan;
 import DBMS.queryProcessing.queryEngine.planEngine.planOperations.createCommands.CreateTableOperation;
 import net.sf.jsqlparser.statement.Statement;
@@ -18,13 +18,13 @@ public class CreateTableStatementParse implements StatementParse{
 	}
 
 	@Override
-	public Plan parse(Statement statement, ISchema schema) throws SQLException {
+	public Plan parse(Statement statement, Schema schema) throws SQLException {
 		CreateTable create = (CreateTable)statement;
 		
 		
 		String name = create.getTable().getName();
 		
-		for (ITable table : schema.getTables()) {
+		for (MTable table : schema.getTables()) {
 			if(table.getName().equals(name)){
 				throw new SQLException("[ERR0] Table: " + name + " already exists in schema: " + schema.getName());
 			}
@@ -45,6 +45,7 @@ public class CreateTableStatementParse implements StatementParse{
 		Plan plan = new Plan(null);
 		CreateTableOperation createTableOperation = new CreateTableOperation();
 		createTableOperation.setTableName(name);
+		createTableOperation.setSchema(schema);
 		createTableOperation.setColumns(columns);
 		createTableOperation.setTypes(types);
 		plan.addOperation(createTableOperation);

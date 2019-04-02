@@ -5,8 +5,7 @@ import java.util.List;
 import java.util.logging.Level;
 
 import DBMS.Kernel;
-import DBMS.transactionManager.ITransaction;
-import DBMS.transactionManager.TransactionManagerListener;
+import DBMS.transactionManager.Transaction;
 
 public class WaitForGraph {
 	
@@ -22,7 +21,7 @@ public class WaitForGraph {
 		List<Edge> newEdges = new LinkedList<>();
 		List<Edge> removedEdgesIn = new LinkedList<>();
 		List<Edge> removedEdgesOut = new LinkedList<>();
-		List<ITransaction> notify = new LinkedList<>();
+		List<Transaction> notify = new LinkedList<>();
 		
 		for (Edge edgeIn : node.getEdgesIn()) {
 			removedEdgesIn.add(edgeIn);
@@ -62,9 +61,9 @@ public class WaitForGraph {
 		//Notify
 		
 		nodes.remove(node);
-		for (ITransaction transaction : notify) {
+		for (Transaction transaction : notify) {
 			synchronized (transaction.getThread()) {
-				transaction.setState(ITransaction.ACTIVE);
+				transaction.setState(Transaction.ACTIVE);
 				transaction.getThread().notify();	
 			}
 		}
@@ -78,7 +77,7 @@ public class WaitForGraph {
 		edge.getN2().getEdgesIn().remove(edge);
 	}
 	
-	public TransactionNode findNode(ITransaction transaction){
+	public TransactionNode findNode(Transaction transaction){
 		for (TransactionNode node : nodes) {
 			if(node.getTransaction() == transaction)return node;
 		}
@@ -93,33 +92,29 @@ public class WaitForGraph {
 
 		if(!n1.getEdgesOut().contains(edge) && !n2.getEdgesIn().contains(edge)){
 			n1.getEdgesOut().add(edge);
-			n2.getEdgesIn().add(edge);
-			TransactionManagerListener t = Kernel.getTransactionManagerListener();
-			if(t!=null)t.newGraphEdgeConflit(n1.getTransaction(), n2.getTransaction());			
+			n2.getEdgesIn().add(edge);	
 		}
 		
 	}
 
-	public void addEdge(ITransaction t1, ITransaction t2){
+	public void addEdge(Transaction t1, Transaction t2){
 		TransactionNode n1 = findNode(t1);
 		TransactionNode n2 = findNode(t2);
 		addEdge(n1, n2);
 	}
 	
 	
-	public void addNode(ITransaction transaction){
+	public void addNode(Transaction transaction){
 		nodes.add(new TransactionNode(transaction));
-		TransactionManagerListener t = Kernel.getTransactionManagerListener();
-		if(t!=null)t.newTransaction(transaction);
+
 		
 	}
 	public void addNode(TransactionNode node){
 		nodes.add(node);
-		TransactionManagerListener t = Kernel.getTransactionManagerListener();
-		if(t!=null)t.newTransaction(node.getTransaction());
+	
 	}
 
-	public boolean hasCycle(ITransaction transaction){
+	public boolean hasCycle(Transaction transaction){
 		if(nodes.isEmpty())return false;
 
 		for (TransactionNode node : nodes) {

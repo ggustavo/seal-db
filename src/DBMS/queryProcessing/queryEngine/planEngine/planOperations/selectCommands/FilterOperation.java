@@ -6,14 +6,15 @@ import java.util.LinkedList;
 import java.util.List;
 
 import DBMS.fileManager.Column;
-import DBMS.queryProcessing.ITable;
-import DBMS.queryProcessing.ITuple;
+import DBMS.queryProcessing.MTable;
+import DBMS.queryProcessing.Tuple;
+import DBMS.queryProcessing.queryEngine.AcquireLockException;
 import DBMS.queryProcessing.queryEngine.Plan;
 import DBMS.queryProcessing.queryEngine.InteratorsAlgorithms.TableScan;
 import DBMS.queryProcessing.queryEngine.planEngine.Condition;
 import DBMS.queryProcessing.queryEngine.planEngine.MultiResultOperation;
 import DBMS.queryProcessing.queryEngine.planEngine.planOperations.AbstractPlanOperation;
-import DBMS.transactionManager.ITransaction;
+import DBMS.transactionManager.Transaction;
 
 
 
@@ -23,16 +24,16 @@ public class FilterOperation extends AbstractPlanOperation{
 	
 	public static final String NONE = ".none.";
 
-	protected void executeOperation(ITable resultTable) {
+	protected void executeOperation(MTable resultTable) throws AcquireLockException {
 		
-		List<ITable> results = getResults();
+		List<MTable> results = getResults();
 		//LogError.save(this.getClass(),results.isEmpty());
 		
-		ITable target = getForeache().getResultTable();
+		MTable target = getForeache().getResultTable();
 		//LogError.save(this.getClass(),target + " <<<=");
 		
-//		for (ITable iTable : results) {
-//			LogError.save(this.getClass(),"-> " +iTable.getName());
+//		for (PointerTable PointerTable : results) {
+//			LogError.save(this.getClass(),"-> " +PointerTable.getName());
 //		}
 		
 //	
@@ -51,11 +52,11 @@ public class FilterOperation extends AbstractPlanOperation{
 //			LogError.save(this.getClass(),);
 //		}
 		
-		ITransaction transaction = super.getPlan().getTransaction();
+		Transaction transaction = super.getPlan().getTransaction();
 		
 		TableScan tableScan = new TableScan(transaction, target);
 		boolean isInsertable = false;
-		ITuple tuple = tableScan.nextTuple();
+		Tuple tuple = tableScan.nextTuple();
 		while(tuple!=null){
 			
 			isInsertable = false;
@@ -89,7 +90,7 @@ public class FilterOperation extends AbstractPlanOperation{
 					}
 					
 					if(c.getType() == Condition.CORRELATION_EXISTS || c.getType() == Condition.CORRELATION_NOT_EXISTS) {
-						ITable r = results.get(Integer.parseInt(c.getTable2()));
+						MTable r = results.get(Integer.parseInt(c.getTable2()));
 						boolean exists = false;
 						
 						if(c.getAtribute() == null || c.getAtribute().equals(NONE)) {
@@ -125,17 +126,17 @@ public class FilterOperation extends AbstractPlanOperation{
 		
 	}
 	
-	private boolean existsNoCodiction(ITransaction transaction, ITable table) {
+	private boolean existsNoCodiction(Transaction transaction, MTable table) throws AcquireLockException {
 		TableScan tr = new TableScan(transaction, table);
-		ITuple tuple = tr.nextTuple();
+		Tuple tuple = tr.nextTuple();
 		return tuple != null; 
 	}
 	
-	private boolean existsCodiction(ITransaction transaction, ITuple tupleTarget,ITable target,Condition c,ITable table) {
+	private boolean existsCodiction(Transaction transaction, Tuple tupleTarget,MTable target,Condition c,MTable table) throws AcquireLockException {
 		
 		
 		TableScan tr = new TableScan(transaction, table);
-		ITuple tuple = tr.nextTuple();
+		Tuple tuple = tr.nextTuple();
 			
 			boolean find = false;
 			
@@ -221,7 +222,7 @@ public class FilterOperation extends AbstractPlanOperation{
 		return filter;
 	}
 
-	public List<ITable> getResults() {
+	public List<MTable> getResults() {
 		return MultiResultOperation.getResults(left);
 	}
 

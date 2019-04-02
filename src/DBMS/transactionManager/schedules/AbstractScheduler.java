@@ -7,10 +7,10 @@ import java.util.Set;
 import java.util.logging.Level;
 
 import DBMS.Kernel;
-import DBMS.fileManager.ObjectDatabaseId;
-import DBMS.transactionManager.ITransaction;
+import DBMS.queryProcessing.Tuple;
 import DBMS.transactionManager.Lock;
 import DBMS.transactionManager.LockManager;
+import DBMS.transactionManager.Transaction;
 import DBMS.transactionManager.TransactionOperation;
 import DBMS.transactionManager.serializationGraph.TransactionNode;
 import DBMS.transactionManager.serializationGraph.WaitForGraph;
@@ -18,7 +18,7 @@ import DBMS.transactionManager.serializationGraph.WaitForGraph;
 
 public abstract class AbstractScheduler {
 
-	protected HashMap<ObjectDatabaseId, LockManager> lockMap;
+	protected HashMap<Tuple, LockManager> lockMap;
 	protected WaitForGraph waitForGraph;
 	protected boolean abortAllProcess = false;
 
@@ -26,15 +26,15 @@ public abstract class AbstractScheduler {
 		lockMap = new HashMap<>();
 		setWaitForGraph(new WaitForGraph());
 	}
-	public abstract void unlockAll(ITransaction transaction);
-	public abstract void unlock(ObjectDatabaseId objectDatabaseId);
-	public abstract Lock requestLock(ITransaction transaction, TransactionOperation transactionOperation) throws InterruptedException;
+	public abstract void unlockAll(Transaction transaction);
+	public abstract void unlock(Tuple TupleManipulate);
+	public abstract Lock requestLock(Transaction transaction, TransactionOperation transactionOperation) throws InterruptedException;
 	
-	protected Lock createLock(ITransaction transaction, TransactionOperation transactionOperation) {
-		if (transactionOperation.getType() == TransactionOperation.READ_TRANSACTION) {
-			return new Lock(transaction, transactionOperation.getObjectDatabaseId(), Lock.READ_LOCK);
-		} else if (transactionOperation.getType() == TransactionOperation.WRITE_TRANSACTION) {
-			return new Lock(transaction, transactionOperation.getObjectDatabaseId(), Lock.WRITE_LOCK);
+	protected Lock createLock(Transaction transaction, TransactionOperation transactionOperation) {
+		if (transactionOperation.getType() == TransactionOperation.READ_TUPLE) {
+			return new Lock(transaction, transactionOperation.getTuple(), Lock.READ_LOCK);
+		} else if (transactionOperation.getType() == TransactionOperation.WRITE_TUPLE) {
+			return new Lock(transaction, transactionOperation.getTuple(), Lock.WRITE_LOCK);
 		}
 		return null;
 	}
@@ -49,8 +49,8 @@ public abstract class AbstractScheduler {
 	
 	public void print(){
 		Kernel.log(this.getClass(),"-------------------",Level.INFO);
-		Set<ObjectDatabaseId> keys = lockMap.keySet();
-		for (ObjectDatabaseId k : keys) {
+		Set<Tuple> keys = lockMap.keySet();
+		for (Tuple k : keys) {
 			LockManager l = lockMap.get(k);
 			Kernel.log(this.getClass(),"Object: " + k,Level.INFO);
 			List<Lock> locks = l.getLockList();

@@ -1,6 +1,8 @@
 package DBMS.transactionManager;
 
+import DBMS.queryProcessing.queryEngine.AcquireLockException;
+
 public interface TransactionRunnable{
-	void run(ITransaction transaction);
-	void onFail(ITransaction transaction, Exception e);
+	void run(Transaction transaction) throws AcquireLockException;
+	void onFail(Transaction transaction, Exception e);
 }
