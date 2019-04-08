@@ -112,6 +112,8 @@ public class Transaction {
 		Kernel.getScheduler().unlockAll(this);
 	}
 	
+
+	
 	public boolean execRunnable(TransactionRunnable tr){
 		if(!canExec())return false;
 		if(thread == null || !schedulable){

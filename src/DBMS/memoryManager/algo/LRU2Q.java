@@ -27,13 +27,14 @@ public class LRU2Q extends Memory{
 	
 	boolean started = false;
 	
+	
 	private void start(){
 		started = true;
-		listInSize = (int) (capacity / 4);
-		listHotSize = (int) (capacity * 0.4);
-		listOutSize = (int) (listHotSize * 0.5);
+		listInSize = (int) (capacity / 4); //25%
+		listHotSize = (int) (capacity * 0.4); //40%
+		listOutSize = (int) (listHotSize * 0.5);//50% do hot
 		
-		listHotSize += (int) (capacity * 0.15);
+//		listHotSize += (int) (capacity * 0.15);
 //		listColdSize = (int) (capacity * 0.15);
 //	
 //		System.out.println("capacity: " + capacity);
@@ -108,6 +109,7 @@ public class LRU2Q extends Memory{
 
 			
 			if(listHot.size() == listHotSize){
+				
 				coldList.add(listHot.remove(listHot.getHead()));
 			}
 			
@@ -152,7 +154,7 @@ public class LRU2Q extends Memory{
 			Node<Tuple> node = listIn.getHead();
 			while (node != null) {
 			
-				logRequests.println(node.getValue().getFullTupleID()+" ["+node.getValue().getOperation()+"]");
+				logRequests.println(node.getValue().getFullTupleID()+","+node.getValue().getOperation());
 				node = node.getNext();
 			}
 			logRequests.close();
@@ -161,7 +163,7 @@ public class LRU2Q extends Memory{
 			node = listOut.getHead();
 			while (node != null) {
 			
-				logRequests.println(node.getValue().getFullTupleID()+" ["+node.getValue().getOperation()+"]");
+				logRequests.println(node.getValue().getFullTupleID()+","+node.getValue().getOperation());
 				node = node.getNext();
 			}
 			logRequests.close();
@@ -170,7 +172,7 @@ public class LRU2Q extends Memory{
 			node = listHot.getHead();
 			while (node != null) {
 			
-				logRequests.println(node.getValue().getFullTupleID()+" ["+node.getValue().getOperation()+"]");
+				logRequests.println(node.getValue().getFullTupleID()+","+node.getValue().getOperation());
 				node = node.getNext();
 			}
 			logRequests.close();		

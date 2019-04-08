@@ -111,7 +111,7 @@ public class LRU extends Memory{
 			Node<Tuple> node = list.getHead();
 			while (node != null) {
 			
-				logRequests.println(node.getValue().getFullTupleID()+" ["+node.getValue().getOperation()+"]");
+				logRequests.println(node.getValue().getFullTupleID()+","+node.getValue().getOperation());
 				node = node.getNext();
 			}
 			

@@ -1,8 +1,16 @@
 package DBMS.memoryManager.algo;
 
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import DBMS.Kernel;
 import DBMS.memoryManager.util.List;
+import DBMS.memoryManager.util.Node;
 import DBMS.queryProcessing.Tuple;
 
 public abstract class Memory { //Algorithm
@@ -44,6 +52,29 @@ public abstract class Memory { //Algorithm
 		return s;
 	}
 	
+	public void saveCold() {
+		SimpleDateFormat dt = new SimpleDateFormat("yyyy-MM-dd hh-mm");
+		String date = dt.format(new Date());
+		
+		try {
+			PrintWriter logRequests = new PrintWriter(new FileWriter(new File(date+" coldlist.tuples") ,  true));
+		
+			
+			Node<Tuple> node = coldList.getHead();
+			while (node != null) {
+			
+				logRequests.println(node.getValue().getFullTupleID()+","+node.getValue().getOperation());
+				node = node.getNext();
+			}
+			
+			
+			logRequests.close();
+		} catch (IOException e) {
+			
+			e.printStackTrace();
+		}
+		
+	}
 	
 	public List<Tuple> getColdList() {
 		return coldList;
@@ -91,6 +122,7 @@ public abstract class Memory { //Algorithm
 	public void setCapacity(int capacity) {
 		this.capacity = capacity;
 	}
+	
 	
 	
 	

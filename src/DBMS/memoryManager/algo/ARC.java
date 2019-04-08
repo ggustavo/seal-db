@@ -17,10 +17,12 @@ public class ARC extends Memory{
 		super();
 	}
 	
+	
 	protected List<Tuple> T1 = new List<Tuple>();
 	protected List<Tuple> T2 = new List<Tuple>();
 	protected List<Tuple> B1 = new List<Tuple>();
 	protected List<Tuple> B2 = new List<Tuple>();
+	
 	protected int POINTER = 0;
 
 	int L1() {
@@ -179,7 +181,7 @@ public class ARC extends Memory{
 			Node<Tuple> node = B1.getHead();
 			while (node != null) {
 			
-				logRequests.println(node.getValue().getFullTupleID()+" ["+node.getValue().getOperation()+"]");
+				logRequests.println(node.getValue().getFullTupleID()+","+node.getValue().getOperation());
 				node = node.getNext();
 			}
 			logRequests.close();
@@ -188,7 +190,7 @@ public class ARC extends Memory{
 			node = T1.getHead();
 			while (node != null) {
 			
-				logRequests.println(node.getValue().getFullTupleID()+" ["+node.getValue().getOperation()+"]");
+				logRequests.println(node.getValue().getFullTupleID()+","+node.getValue().getOperation());
 				node = node.getNext();
 			}
 			logRequests.close();
@@ -197,7 +199,7 @@ public class ARC extends Memory{
 			node = T2.getHead();
 			while (node != null) {
 			
-				logRequests.println(node.getValue().getFullTupleID()+" ["+node.getValue().getOperation()+"]");
+				logRequests.println(node.getValue().getFullTupleID()+","+node.getValue().getOperation());
 				node = node.getNext();
 			}
 			logRequests.close();
@@ -206,7 +208,7 @@ public class ARC extends Memory{
 			node = B2.getHead();
 			while (node != null) {
 			
-				logRequests.println(node.getValue().getFullTupleID()+" ["+node.getValue().getOperation()+"]");
+				logRequests.println(node.getValue().getFullTupleID()+","+node.getValue().getOperation());
 				node = node.getNext();
 			}
 			logRequests.close();

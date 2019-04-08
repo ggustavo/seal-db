@@ -29,7 +29,8 @@ public class TPCCLoad {
 
 				System.out.println("  <... Load Process  ...>  ");
 				
-				String tpchSourceFile = "D:\\tpcc\\";
+				
+				String tpchSourceFile = Kernel.createDirectory("workload") + File.separator;
 				
 				int total = 0;
 				

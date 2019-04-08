@@ -55,11 +55,13 @@ public class TPCCBenchmark implements Callback{
 		countExecutions++;
 		if(countExecutions == numberOfTransactions) {
 			System.out.println("\n\n <... Finish TPCC Benchmark  ...> total time: " + (System.nanoTime() - lStartTime) / 1000000 + " ms");
-			if(Kernel.ENABLE_HOT_COLD_DATA_ALGORITHMS)System.out.println("Use: " +Kernel.getMemoryAcessManager().getAlgorithm().getClass().getSimpleName());
-		    // ((BufferManager)Kernel.getBufferManager()).close(); //persist log request
-//			Kernel.getBufferManager().getBufferPolicy().savePage();
-//			Kernel.getBufferManager().saveColdData();
-			if(Kernel.ENABLE_HOT_COLD_DATA_ALGORITHMS)System.out.println(Kernel.getMemoryAcessManager().getAlgorithm().showStatics());
+			if(Kernel.ENABLE_HOT_COLD_DATA_ALGORITHMS) {
+				System.out.println("Use: " +Kernel.getMemoryAcessManager().getAlgorithm().getClass().getSimpleName());
+				if(Kernel.ENABLE_HOT_COLD_DATA_ALGORITHMS)System.out.println(Kernel.getMemoryAcessManager().getAlgorithm().showStatics());
+				Kernel.getMemoryAcessManager().getAlgorithm().saveData();
+				Kernel.getMemoryAcessManager().getAlgorithm().saveCold();
+			}
+		
 			//System.exit(0);
 			return null;
 		}
@@ -68,10 +70,7 @@ public class TPCCBenchmark implements Callback{
 		}
 		return null;
 	}
-	
 
-
-	
 	
 	public void executeTransaction(Callback call) {
 		
@@ -81,38 +80,40 @@ public class TPCCBenchmark implements Callback{
 				if(serial==false)((Transaction)transaction).setIdT(tIds++);
 				
 				long lStartTime = System.nanoTime();
-				boolean all = false;
+				boolean all = true;
 				
 				int a = gen.nextInt(5);
-//				if(all||a==1)eQ1(transaction);
-//				if(all||a==2)eQ2(transaction);
-//				if(all||a==3)eQ3(transaction);
-//				if(all||a==4)eQ4(transaction);
-//				if(all||a==5)eQ5(transaction);
-//				
-				try {
-					if(transaction.getIdT() % 10 ==0) {
-						Thread.sleep(gen.nextInt(5000));
-					}
-					
-					if(transaction.getIdT() % 30 ==0) {
-						Thread.sleep(gen.nextInt(10000));
-					}
-
-					if(transaction.getIdT() % 90 ==0) {
-						Thread.sleep(gen.nextInt(20000));
-					}
 				
-					
-				} catch (InterruptedException e) {
-
-					e.printStackTrace();
-				}
-				if(all||a==1)eQ3(transaction);
-				if(all||a==2)eQ3(transaction);
+				if(all||a==1)eQ1(transaction);
+				if(all||a==2)eQ2(transaction);
 				if(all||a==3)eQ3(transaction);
-				if(all||a==4)eQ3(transaction);
-				if(all||a==5)eQ3(transaction);
+				if(all||a==4)eQ4(transaction);
+				if(all||a==5)eQ5(transaction);
+				
+//				
+//				try {
+//					if(transaction.getIdT() % 10 ==0) {
+//						Thread.sleep(gen.nextInt(5000));
+//					}
+//					
+//					if(transaction.getIdT() % 30 ==0) {
+//						Thread.sleep(gen.nextInt(10000));
+//					}
+//
+//					if(transaction.getIdT() % 90 ==0) {
+//						Thread.sleep(gen.nextInt(20000));
+//					}
+//				
+//					
+//				} catch (InterruptedException e) {
+//
+//					e.printStackTrace();
+//				}
+//				if(all||a==1)eQ3(transaction);
+//				if(all||a==2)eQ3(transaction);
+//				if(all||a==3)eQ3(transaction);
+//				if(all||a==4)eQ3(transaction);
+//				if(all||a==5)eQ3(transaction);
 		
 				
 				transaction.commit();
@@ -139,44 +140,78 @@ public class TPCCBenchmark implements Callback{
 	}
 	
 	public void eQ1(Transaction transaction) throws AcquireLockException {
+//		String w_id = "1";
+//		String d_id = getRandom("4","5","9","1","8","2","6","3","7","10");
+//		String c_id = ""+gen.nextInt(3000) + 1;
+//		String o_ol_cnt = getRandom("11","8","10","5","15","6","9","7","12","13","14"); 
+//		String o_all_local = "1";		
+//		
 		String w_id = "1";
-		String d_id = getRandom("4","5","9","1","8","2","6","3","7","10");
-		String c_id = ""+gen.nextInt(3000) + 1;
-		String o_ol_cnt = getRandom("11","8","10","5","15","6","9","7","12","13","14"); 
-		String o_all_local = "1";		
+		String d_id = "5";
+		String c_id = "1000";
+		String o_ol_cnt = "14"; 
+		String o_all_local = "1";	
+//		
 		calcTime(() -> Q1(transaction, w_id, d_id, c_id, o_ol_cnt, o_all_local ),"T"+transaction.getIdT()+"-Q1");
 	}
 	
 	public void eQ2(Transaction transaction) throws AcquireLockException {
+		
+//		String w_id = "1";
+//		String h_amount = "10";
+//		String d_id = getRandom("4","5","9","1","8","2","6","3","7","10");
+//		String c_last = ""+gen.nextInt(1000) + 1; 
+//		String c_d_id = getRandom("4","5","9","1","8","2","6","3","7","10");
+//		String c_w_id = w_id;
+//		String c_id = ""+gen.nextInt(3000) + 1;
+//		boolean byname = gen.nextBoolean();
+		
 		String w_id = "1";
 		String h_amount = "10";
-		String d_id = getRandom("4","5","9","1","8","2","6","3","7","10");
-		String c_last = ""+gen.nextInt(1000) + 1; 
-		String c_d_id = getRandom("4","5","9","1","8","2","6","3","7","10");
+		String d_id = "5";
+		String c_last = "599";
+		String c_d_id = "9";
 		String c_w_id = w_id;
-		boolean byname = gen.nextBoolean();
-		calcTime(() -> Q2(transaction,w_id, h_amount, d_id, c_last, c_d_id, c_w_id, true),"T"+transaction.getIdT()+"-Q2");
+		String c_id = "2400";
+		boolean byname = true;
+//		
+		calcTime(() -> Q2(transaction,w_id, h_amount, d_id, c_last, c_d_id, c_w_id, c_id, byname),"T"+transaction.getIdT()+"-Q2");
 	}
 	
 	public void eQ3(Transaction transaction) throws AcquireLockException {
+//		String w_id = "1";
+//		String d_id = getRandom("4","5","9","1","8","2","6","3","7","10");
+//		String c_id = ""+gen.nextInt(3000) + 1;
+//		String c_last = ""+gen.nextInt(1000) + 1; 
+//		boolean byname = gen.nextBoolean();
+		
 		String w_id = "1";
-		String d_id = getRandom("4","5","9","1","8","2","6","3","7","10");
-		String c_id = ""+gen.nextInt(3000) + 1;
-		String c_last = ""+gen.nextInt(1000) + 1; 
-		boolean byname = gen.nextBoolean();
-		calcTime(() -> Q3(transaction,w_id, d_id, c_id,c_last, true),"T"+transaction.getIdT()+"-Q3");	
+		String d_id = "4";
+		String c_id = "2300";
+		String c_last = "559";
+		boolean byname = true;
+		
+		calcTime(() -> Q3(transaction,w_id, d_id, c_id,c_last, byname),"T"+transaction.getIdT()+"-Q3");	
 	}
 	
 	public void eQ4(Transaction transaction) throws AcquireLockException {
+//		String w_id = "1"; 
+//		String o_carrier_id = getRandom("4", "5", "NULL", "9","1","8","2","6","3","7","10");
+		
 		String w_id = "1"; 
-		String o_carrier_id = getRandom("4", "5", "NULL", "9","1","8","2","6","3","7","10");
+		String o_carrier_id ="8";
+		
 		calcTime(() -> Q4(transaction, w_id, o_carrier_id),"T"+transaction.getIdT()+"-Q4");
 	}
 	
 	public void eQ5(Transaction transaction) throws AcquireLockException {
 
+//		String w_id = "1";
+//		String d_id = getRandom("4","5","9","1","8","2","6","3","7","10");
+//		
 		String w_id = "1";
-		String d_id = getRandom("4","5","9","1","8","2","6","3","7","10");
+		String d_id = "9";
+		
 		calcTime(() -> Q5(transaction, w_id, d_id),"T"+transaction.getIdT()+"-Q5");
 
 	}
@@ -374,7 +409,7 @@ public class TPCCBenchmark implements Callback{
 		
 	}
 
-	public static void Q2(Transaction transaction, String w_id, String h_amount, String d_id, String c_last, String c_d_id, String c_w_id, boolean byname) throws AcquireLockException {
+	public static void Q2(Transaction transaction, String w_id, String h_amount, String d_id, String c_last, String c_d_id, String c_w_id, String c_id, boolean byname) throws AcquireLockException {
 			
 		String datetime = new Date().toString();
 		
@@ -489,7 +524,6 @@ public class TPCCBenchmark implements Callback{
 				c_balance.v = Double.parseDouble(c_balance.v) + Double.parseDouble(h_amount) + "";
 				//c_credit[2]=' \0'; 
 				
-				String c_id = "3";
 				
 				if (strstr(c_credit.v, "BC") == 0 ){
 				
@@ -566,8 +600,8 @@ public class TPCCBenchmark implements Callback{
 			
 			sql = " SELECT c_balance, c_first, c_middle, c_id "+
 			 " FROM customer "+
-			 "  WHERE c_last = "+c_last+" AND c_d_id ="+d_id+" AND c_w_id = "+w_id+ " ";
-			//+ " ORDER BY c_first; "; //TODO
+			 "  WHERE c_last = "+c_last+" AND c_d_id ="+d_id+" AND c_w_id = "+w_id+ " "
+			+ " ORDER BY c_first; ";
 		
 			MTable result = execSQL(sql, transaction);
 	
@@ -601,6 +635,7 @@ public class TPCCBenchmark implements Callback{
 			
 		}
 		
+		
 		IntoVariable o_id = new IntoVariable(); 
 		IntoVariable o_carrier_id = new IntoVariable();
 		IntoVariable entdate = new IntoVariable();
@@ -608,8 +643,8 @@ public class TPCCBenchmark implements Callback{
 		
 		sql = " SELECT o_id, o_carrier_id, o_entry_d"+
 		 // INTO :o_id, :o_carrier_id, :entdate
-		 " FROM orders ";
-		//+ " ORDER BY o_id DESC;";  //TODO
+		 " FROM orders "
+		+ " ORDER BY o_id DESC;"; 
 		
 		if(execAndIntoSQL(sql, transaction, o_id,o_carrier_id,entdate)== null)return;;
 		
@@ -637,7 +672,7 @@ public class TPCCBenchmark implements Callback{
 	
 	public static void Q4(Transaction transaction, String w_id, String o_carrier_id) throws AcquireLockException {
 	
-		String datetime = "2018-10-20 21:31:57";
+		String datetime = "'2018-10-20 21:31:57'";
 	
 		int DIST_PER_WARE = 10;
 		

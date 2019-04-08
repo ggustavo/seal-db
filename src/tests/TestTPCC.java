@@ -14,8 +14,8 @@ public class TestTPCC {
 		try {
 			
 			Kernel.ENABLE_RECOVERY = true;	
-			Kernel.ENABLE_LOG_REQUESTS = false;
-			Kernel.ENABLE_HOT_COLD_DATA_ALGORITHMS = false;
+			Kernel.ENABLE_LOG_REQUESTS = true;
+			Kernel.ENABLE_HOT_COLD_DATA_ALGORITHMS = true;
 			Kernel.MEMORY_SIZE_TUPLES = 100000;
 			
 			Kernel.getInitializer().setInitializerListen(new InitializerListen() {
@@ -32,16 +32,16 @@ public class TestTPCC {
 				}
 
 			});
-		//	Kernel.getMemoryAcessManager().setAlgorithm(new LRU());
+			Kernel.getMemoryAcessManager().setAlgorithm(new LRU());
 		//	Kernel.getMemoryAcessManager().setAlgorithm(new ARC());
 		//	Kernel.getMemoryAcessManager().setAlgorithm(new LRU2Q());
 			Kernel.start(); 
 			
-			TransactionsThroughput.start();
+		//	TransactionsThroughput.start();
 			
 			TPCCBenchmark benchmark = new TPCCBenchmark();
-			benchmark.numberOfTransactions = 20;
-			benchmark.serial = false;	
+			benchmark.numberOfTransactions = 1;
+			benchmark.serial = true;	
 			benchmark.startBenchmark();
 			
 			

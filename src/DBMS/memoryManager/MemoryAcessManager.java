@@ -83,8 +83,8 @@ public class MemoryAcessManager {
 			}
 		}
 			
-		logRequests.println(time.toString()+":"+id+" ["+operation+"]");
-		time.add(BigInteger.ONE);
+		logRequests.println(time.toString()+","+id+","+operation);
+		time = time.add(BigInteger.ONE);
 		
 	}
 
