@@ -4,7 +4,9 @@ import java.util.logging.Level;
 import DBMS.Kernel;
 import DBMS.fileManager.Schema;
 import DBMS.fileManager.dataAcessManager.file.log.FileRedoLog;
-import DBMS.fileManager.dataAcessManager.file.log.FileRedoLog.LogInterator;
+import DBMS.fileManager.dataAcessManager.file.log.IndexLog;
+import DBMS.fileManager.dataAcessManager.file.log.LogHandle;
+import DBMS.fileManager.dataAcessManager.file.log.LogInterator;
 import DBMS.queryProcessing.MTable;
 import DBMS.queryProcessing.Tuple;
 import DBMS.transactionManager.Transaction;
@@ -12,14 +14,14 @@ import DBMS.transactionManager.TransactionOperation;
 
 public class RedoLog implements IRecoveryManager {
 
-	private FileRedoLog fileRedoLog;
+	private LogHandle logHandle;
 	private int CURRENT_LSN = 0;
 	private final String TUPLE_ID_SEPARATOR = "Æ";
 	private boolean debug = false;
 	
 	public void start(String file) {
-		fileRedoLog = new FileRedoLog(file);
-		CURRENT_LSN = fileRedoLog.readLastLSN();
+		logHandle = new IndexLog(file);
+		CURRENT_LSN = logHandle.readLastLSN();
 		
 		if (Kernel.getFinalizeStateDatabase().equals(Kernel.DATABASE_FINALIZE_STATE_ERROR)) {
 			if(Kernel.ENABLE_RECOVERY){
@@ -49,7 +51,7 @@ public class RedoLog implements IRecoveryManager {
 	private int cUpdates = 0;
 	public void recovery() {
 		
-		fileRedoLog.interator(new LogInterator() {
+		logHandle.interator(new LogInterator() {
 			
 			@Override
 			public char readRecord(int lsn, int trasaction, char operation, String obj, long filePointer) {
@@ -242,14 +244,14 @@ public class RedoLog implements IRecoveryManager {
 				if(operation.getType() == TransactionOperation.WRITE_TUPLE) {
 					
 					if(operation.getTupleOperation() == MTable.DELETE) {
-						fileRedoLog.append(getNewLSN(), transaction.getIdT(), operation.getTupleOperation(), getGlobalTupleID(operation.getTuple()) + TUPLE_ID_SEPARATOR + operation.getBeforedata());
+						logHandle.append(getNewLSN(), transaction.getIdT(), operation.getTupleOperation(), getGlobalTupleID(operation.getTuple()), getGlobalTupleID(operation.getTuple()) + TUPLE_ID_SEPARATOR + operation.getBeforedata());
 					}else
 					if (operation.getTupleOperation() == MTable.UPDATE) {
-						fileRedoLog.append(getNewLSN(), transaction.getIdT(), operation.getTupleOperation(), getGlobalTupleID(operation.getTuple()) + TUPLE_ID_SEPARATOR + operation.getTuple().getStringData());
+						logHandle.append(getNewLSN(), transaction.getIdT(), operation.getTupleOperation(), getGlobalTupleID(operation.getTuple()), getGlobalTupleID(operation.getTuple()) + TUPLE_ID_SEPARATOR + operation.getTuple().getStringData());
 						
 					}else
 					if (operation.getTupleOperation() == MTable.INSERT) {
-						fileRedoLog.append(getNewLSN(), transaction.getIdT(), operation.getTupleOperation(), getGlobalTupleID(operation.getTuple()) + TUPLE_ID_SEPARATOR + operation.getTuple().getStringData());
+						logHandle.append(getNewLSN(), transaction.getIdT(), operation.getTupleOperation(), getGlobalTupleID(operation.getTuple()), getGlobalTupleID(operation.getTuple()) + TUPLE_ID_SEPARATOR + operation.getTuple().getStringData());
 						
 					}else {
 						Kernel.log(this.getClass(),"LOG OPERATION ERROR: " + transaction.getIdT(),Level.SEVERE);
@@ -257,7 +259,7 @@ public class RedoLog implements IRecoveryManager {
 					
 					
 				}else if(operation.getType() != TransactionOperation.READ_TUPLE){
-					fileRedoLog.append(getNewLSN(), transaction.getIdT(), operation.getType(), "---");
+					logHandle.append(getNewLSN(), transaction.getIdT(),operation.getType(), null, "---");
 				}else {
 					//READ!
 				}
@@ -288,7 +290,7 @@ public class RedoLog implements IRecoveryManager {
 	@Override
 	public void printLog() {
 		
-		fileRedoLog.interator(new LogInterator() {
+		logHandle.interator(new LogInterator() {
 			
 			@Override
 			public char readRecord(int lsn, int trasaction, char operation, String obj, long filePointer) {

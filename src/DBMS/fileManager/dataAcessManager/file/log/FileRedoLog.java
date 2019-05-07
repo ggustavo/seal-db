@@ -6,7 +6,7 @@ import java.io.RandomAccessFile;
 
 import DBMS.fileManager.dataAcessManager.file.DataConvert;
 
-public class FileRedoLog {
+public class FileRedoLog implements LogHandle {
 	
 	
 	public RandomAccessFile randomAccessFile;
@@ -19,9 +19,8 @@ public class FileRedoLog {
 		}
 	}
 	
-	private final static String LOG_SEPARATOR = "ϕ";
-	
-	public synchronized void append(int lsn, int trasaction, char operation, String obj){
+	@Override
+	public synchronized void append(int lsn, int trasaction, char operation, String tupleID, String obj){
 
 		try {
 			String record =  lsn + LOG_SEPARATOR
@@ -58,6 +57,7 @@ public class FileRedoLog {
 	
 	
 	private Integer lsn = null;
+	@Override
 	public synchronized int readLastLSN() {
 		interator(new LogInterator() {
 			
@@ -79,10 +79,12 @@ public class FileRedoLog {
 	}
 	
 	
+	@Override
 	public void interator(LogInterator interator) {
 		interator(interator, true); 
 	}
 	
+	@Override
 	public void interator(LogInterator interator, boolean end) {
 		
 		long currentPointer = end ? getPointer() : 0;
@@ -157,14 +159,7 @@ public class FileRedoLog {
 
 	}
 	
-	public static interface LogInterator {
-		public static final char STOP = 'S';
-		public static final char NEXT = 'N';
-		public static final char PREV = 'P';
-		
-		char readRecord(int lsn, int trasaction,char operation,String obj, long filePointer);
-		void error(Exception e);
-	}
+	
 	
 	
 	

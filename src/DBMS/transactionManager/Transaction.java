@@ -98,10 +98,16 @@ public class Transaction {
 		
 		if(SEND_TEMP_OPERATIONS_TO_lOG && recoverable && operation.getType() == TransactionOperation.WRITE_TUPLE) {
 			operation.setBeforedata(beforedata);
+			operations.add(operation);
 		}
 	
 		if(isTemp && !temps.contains(tuple.getTable())){
 			temps.add(tuple.getTable());
+		}
+		
+		if(recoverable && operation.getType() == TransactionOperation.WRITE_TUPLE) {
+			operation.setBeforedata(beforedata);
+			operations.add(operation);
 		}
 		
 		if(schedulable)Kernel.getScheduler().unlock(tuple);

@@ -14,8 +14,8 @@ public class TestTPCC {
 		try {
 			
 			Kernel.ENABLE_RECOVERY = true;	
-			Kernel.ENABLE_LOG_REQUESTS = true;
-			Kernel.ENABLE_HOT_COLD_DATA_ALGORITHMS = true;
+			Kernel.ENABLE_LOG_REQUESTS = false;
+			Kernel.ENABLE_HOT_COLD_DATA_ALGORITHMS = false;
 			Kernel.MEMORY_SIZE_TUPLES = 100000;
 			
 			Kernel.getInitializer().setInitializerListen(new InitializerListen() {

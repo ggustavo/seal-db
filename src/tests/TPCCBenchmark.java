@@ -57,7 +57,7 @@ public class TPCCBenchmark implements Callback{
 			System.out.println("\n\n <... Finish TPCC Benchmark  ...> total time: " + (System.nanoTime() - lStartTime) / 1000000 + " ms");
 			if(Kernel.ENABLE_HOT_COLD_DATA_ALGORITHMS) {
 				System.out.println("Use: " +Kernel.getMemoryAcessManager().getAlgorithm().getClass().getSimpleName());
-				if(Kernel.ENABLE_HOT_COLD_DATA_ALGORITHMS)System.out.println(Kernel.getMemoryAcessManager().getAlgorithm().showStatics());
+				System.out.println(Kernel.getMemoryAcessManager().getAlgorithm().showStatics());
 				Kernel.getMemoryAcessManager().getAlgorithm().saveData();
 				Kernel.getMemoryAcessManager().getAlgorithm().saveCold();
 			}
@@ -128,7 +128,7 @@ public class TPCCBenchmark implements Callback{
 				transaction.abort();
 				//System.exit(0);
 			}
-		},false,false);
+		},true,true);
 	}
 	
 	private static Random gen = new Random();
