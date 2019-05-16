@@ -1,9 +1,9 @@
 package DBMS.queryProcessing;
 
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
 import DBMS.Kernel;
@@ -12,7 +12,6 @@ import DBMS.fileManager.Schema;
 import DBMS.queryProcessing.queryEngine.AcquireLockException;
 import DBMS.transactionManager.Lock;
 import DBMS.transactionManager.Transaction;
-import DBMS.transactionManager.TransactionOperation;
 
 
 
@@ -41,7 +40,7 @@ public class MTable{
 	
 	public static int TABLE_ID_COUNT = 1000;
 		
-	private HashMap<String,Tuple> tuples;
+	private ConcurrentHashMap<String,Tuple> tuples;
 	
 	private synchronized static int getNewId(){
 		TABLE_ID_COUNT++;
@@ -97,8 +96,8 @@ public class MTable{
 		table.columns = columns;
 		table.lastTupleWrited = lastTupleWrited;
 		schemaManipulate.addTable(table);
-		table.tuples = new HashMap<>();
-		Kernel.log(table.getClass(),"open table: "+table.getControlTupleString()+" columns: " + Arrays.toString(columns),Level.CONFIG);
+		table.tuples = new ConcurrentHashMap<>();
+		Kernel.log(table.getClass(),"open table: " + table.getControlTupleString() + " columns: " + Arrays.toString(columns),Level.CONFIG);
 		return table;
 	}
 	
@@ -109,7 +108,7 @@ public class MTable{
 		table.tableID = getNewId();
 		table.lastTupleWrited = 0;
 		table.schemaManipulate.addTable(table);
-		table.tuples = new HashMap<>();
+		table.tuples = new ConcurrentHashMap<>();
 		//Kernel.log(table.getClass(),"open temp table: "+table.getControlTupleString()+" columns: " + Arrays.toString(columns),Level.CONFIG);
 		
 		return table;
@@ -142,12 +141,11 @@ public class MTable{
 		Tuple tuple = tuples.get(tupleId); 
 		if(tuple==null)return null;
 		
-		TransactionOperation operation = transaction.lock(tuple, Lock.READ_LOCK); //Delete Problemns
-		if(operation==null)return null;
+		if(!transaction.lock(tuple, Lock.WRITE_LOCK))return null;
 		
 		Kernel.getMemoryAcessManager().request(Lock.READ_LOCK, tuple);
 		
-		transaction.unlock(GET,operation,tuple,null,temp);
+		transaction.unlock(Lock.READ_LOCK,GET,tuple,null,temp);
 		
 		return tuple;
 	}
@@ -159,13 +157,12 @@ public class MTable{
 		if(tuple==null)return false;
 		
 		
-		TransactionOperation operation = transaction.lock(tuple, Lock.WRITE_LOCK);
-		if(operation==null)return false;
+		if(!transaction.lock(tuple, Lock.WRITE_LOCK))return false;
 		
 		Kernel.getMemoryAcessManager().request(Lock.WRITE_LOCK, tuple);
 		tuples.remove(tupleId);
 		
-		transaction.unlock(DELETE,operation,tuple,null,temp);
+		transaction.unlock(Lock.WRITE_LOCK, DELETE,tuple,null,temp);
 		tuple.setData(null);
 		
 		return true;
@@ -176,9 +173,7 @@ public class MTable{
 		Tuple tuple = tuples.get(tupleId); 
 		if(tuple==null)return false;
 		
-		
-		TransactionOperation operation = transaction.lock(tuple, Lock.WRITE_LOCK);
-		if(operation==null)return false;
+		if(!transaction.lock(tuple, Lock.WRITE_LOCK))return false;
 		
 		String [] before = tuple.getData();
 		tuple.setData(data);
@@ -187,7 +182,7 @@ public class MTable{
 		//System.out.println("before: " + arrayToString(before));
 		//System.out.println("after: " + arrayToString(data));
 				
-		transaction.unlock(UPDATE,operation,tuple,before,temp);
+		transaction.unlock(Lock.WRITE_LOCK, UPDATE,tuple,before,temp);
 		
 		return true;
 	}
@@ -201,13 +196,12 @@ public class MTable{
 		Tuple tuple = new Tuple(this, String.valueOf(id), lineToArray(tupleData));
 		
 
-		TransactionOperation operation = transaction.lock(tuple, Lock.WRITE_LOCK);
-		if(operation==null)return false;
+		if(!transaction.lock(tuple, Lock.WRITE_LOCK))return false;
 				
 		tuples.put(tuple.getTupleID(), tuple);
 		Kernel.getMemoryAcessManager().request(Lock.WRITE_LOCK, tuple);
 		
-		transaction.unlock(INSERT,operation,tuple,null,temp);
+		transaction.unlock(Lock.WRITE_LOCK, INSERT,tuple,null,temp);
 		
 		return true;
 	}
@@ -243,11 +237,11 @@ public class MTable{
 		return s;
 	}
 	
-	public  List<Tuple> getTuples(){
-		return new LinkedList<Tuple>(tuples.values());
+	public Collection<Tuple> getTuples(){
+		return tuples.values();
 	}
 	
-	public  HashMap<String, Tuple> getTuplesHash(){
+	public  Map<String, Tuple> getTuplesHash(){
 		return tuples;
 	}
 	

@@ -298,6 +298,7 @@ public class TPCCLoad {
 				Plan createTable = new Parse().parseSQL(sqls[i], Kernel.getCatalog().getSchemabyName("tpcc"));
 				createTable.setTransaction(transaction);
 				createTable.execute();
+				
 			}
 			System.out.println();
 		} catch (SQLException e) {

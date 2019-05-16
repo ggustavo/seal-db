@@ -3,10 +3,12 @@ import java.util.logging.Level;
 
 import DBMS.Kernel;
 import DBMS.fileManager.Schema;
-import DBMS.fileManager.dataAcessManager.file.log.FileRedoLog;
-import DBMS.fileManager.dataAcessManager.file.log.IndexLog;
+import DBMS.fileManager.dataAcessManager.file.log.SequentialLog;
+import DBMS.fileManager.dataAcessManager.file.log.FullTreeLog;
+import DBMS.fileManager.dataAcessManager.file.log.HybridTreeLog;
 import DBMS.fileManager.dataAcessManager.file.log.LogHandle;
 import DBMS.fileManager.dataAcessManager.file.log.LogInterator;
+import DBMS.fileManager.dataAcessManager.file.log.ParallelHybridTreeLog;
 import DBMS.queryProcessing.MTable;
 import DBMS.queryProcessing.Tuple;
 import DBMS.transactionManager.Transaction;
@@ -16,18 +18,37 @@ public class RedoLog implements IRecoveryManager {
 
 	private LogHandle logHandle;
 	private int CURRENT_LSN = 0;
-	private final String TUPLE_ID_SEPARATOR = "Æ";
+	public static final String TUPLE_ID_SEPARATOR = "Æ";
 	private boolean debug = false;
 	
+	
+	
 	public void start(String file) {
-		logHandle = new IndexLog(file);
+		
+		
+		if(Kernel.LOG_STRATEGY == Kernel.SEQUENTIAL_lOG) {
+			logHandle = new SequentialLog(file);
+		}
+		if(Kernel.LOG_STRATEGY == Kernel.FULL_TREE_lOG) {
+			logHandle = new FullTreeLog(file);
+		}
+		if(Kernel.LOG_STRATEGY == Kernel.HYBRID_TREE_lOG) {
+			logHandle = new HybridTreeLog(file);
+		}
+		if(Kernel.LOG_STRATEGY == Kernel.PARALLEL_HYBRID_TREE_lOG) {
+			logHandle = new ParallelHybridTreeLog(file);
+		}
+		
+		
 		CURRENT_LSN = logHandle.readLastLSN();
 		
 		if (Kernel.getFinalizeStateDatabase().equals(Kernel.DATABASE_FINALIZE_STATE_ERROR)) {
 			if(Kernel.ENABLE_RECOVERY){
+				Kernel.log(Kernel.class, "Use " + logHandle.getClass().getSimpleName() + " Strategy", Level.CONFIG);
 				Kernel.log(this.getClass(),"Start recovery process...",Level.WARNING);
-				recovery();	
-				Kernel.log(this.getClass(),"Finish recovery process...",Level.WARNING);
+				long lStartTime = System.nanoTime();
+				recovery();		
+				Kernel.log(this.getClass(),"Finish recovery process... total time: " + (System.nanoTime() - lStartTime) / 1000000 + " ms",Level.WARNING);
 			}
 		} else {
 			Kernel.log(this.getClass(),"Normal startup without recovery...",Level.WARNING);
@@ -160,53 +181,16 @@ public class RedoLog implements IRecoveryManager {
 					if(operation.getTupleOperation() == MTable.DELETE) {
 						
 						table.getTuplesHash().put(tuple.getTupleID(), tuple);
-						
-						
-//						if(table.isSystemTable()){
-//							if(table == Kernel.getInitializer().getTables()){
-//								
-//							}
-//							if(table == Kernel.getInitializer().getSchemas()){
-//								
-//								
-//							}	
-//						}
+								
 					}else
 					if (operation.getTupleOperation() == MTable.UPDATE) {
 						tuple.setData(operation.getBeforedata());
-						
-//						if(table.isSystemTable()){
-//							if(table == Kernel.getInitializer().getTables()){
-//									
-//								
-//							}
-//							if(table == Kernel.getInitializer().getSchemas()){
-//								Schema schema = Kernel.getCatalog().getSchemabyName(tuple.getColunmData(table.getIdColumn("schema_name")));
-//								schema.setId(Integer.parseInt(operation.getBeforedata()[Tuple.getIdColumn(table.getColumnNames(), "schema_id")]));
-//								schema.setName(operation.getBeforedata()[Tuple.getIdColumn(table.getColumnNames(), "schema_name")]);	
-//							}
-//						}
-						
+
 					}else
 					if (operation.getTupleOperation() == MTable.INSERT) {
 						
 						table.getTuplesHash().remove(tuple.getTupleID());
-						
-//						if(table.isSystemTable()){
-//							if(table == Kernel.getInitializer().getTables()){
-//								String schemaID = tuple.getColunmData(table.getIdColumn("schema_id_fk"));
-//								String tableName = tuple.getColunmData(table.getIdColumn("table_name"));
-//								Kernel.getCatalog().getSchemabyId(schemaID).removeTable(tableName);
-//								
-//							}
-//							if(table == Kernel.getInitializer().getSchemas()){
-//								Kernel.getCatalog().removeShema(tuple.getColunmData(table.getIdColumn("schema_name")));
-//							}
-////							if(table == Kernel.getInitializer().getColumns()){
-////								
-////							}
-//						}
-						
+								
 					}else {
 						Kernel.log(this.getClass(),"LOG OPERATION ERROR: " + transaction.getIdT(),Level.SEVERE);
 					}
@@ -220,14 +204,14 @@ public class RedoLog implements IRecoveryManager {
 			}
 			
 		}
-		Kernel.log(this.getClass(),"Finish Undo Transaction: " + transaction.getIdT(),Level.WARNING);
+		//Kernel.log(this.getClass(),"Finish Undo Transaction: " + transaction.getIdT() + " operations: " + transaction.getOperations().size(),Level.WARNING);
 	}
 	
 	
 	
-	public synchronized void commitTransaction(Transaction transaction) {
+	public void commitTransaction(Transaction transaction) {
 		if(!Kernel.ENABLE_RECOVERY)return;
-
+		int writes = 0;
 		for (int i = 0; i < transaction.getOperations().size(); i++) {
 			TransactionOperation operation = transaction.getOperations().get(i);
 
@@ -245,14 +229,16 @@ public class RedoLog implements IRecoveryManager {
 					
 					if(operation.getTupleOperation() == MTable.DELETE) {
 						logHandle.append(getNewLSN(), transaction.getIdT(), operation.getTupleOperation(), getGlobalTupleID(operation.getTuple()), getGlobalTupleID(operation.getTuple()) + TUPLE_ID_SEPARATOR + operation.getBeforedata());
+						writes++;
 					}else
 					if (operation.getTupleOperation() == MTable.UPDATE) {
 						logHandle.append(getNewLSN(), transaction.getIdT(), operation.getTupleOperation(), getGlobalTupleID(operation.getTuple()), getGlobalTupleID(operation.getTuple()) + TUPLE_ID_SEPARATOR + operation.getTuple().getStringData());
-						
+						writes++;
+					
 					}else
 					if (operation.getTupleOperation() == MTable.INSERT) {
 						logHandle.append(getNewLSN(), transaction.getIdT(), operation.getTupleOperation(), getGlobalTupleID(operation.getTuple()), getGlobalTupleID(operation.getTuple()) + TUPLE_ID_SEPARATOR + operation.getTuple().getStringData());
-						
+						writes++;
 					}else {
 						Kernel.log(this.getClass(),"LOG OPERATION ERROR: " + transaction.getIdT(),Level.SEVERE);
 					}
@@ -260,8 +246,9 @@ public class RedoLog implements IRecoveryManager {
 					
 				}else if(operation.getType() != TransactionOperation.READ_TUPLE){
 					logHandle.append(getNewLSN(), transaction.getIdT(),operation.getType(), null, "---");
+					writes++;
 				}else {
-					//READ!
+					//READ
 				}
 				
 			}else {
@@ -269,7 +256,7 @@ public class RedoLog implements IRecoveryManager {
 			}
 			
 		}
-		Kernel.log(this.getClass(),"Finish Commit Transaction: " + transaction.getIdT(),Level.WARNING);
+		Kernel.log(this.getClass(),"Finish Commit Transaction: " + transaction.getIdT() + " operations: " + transaction.getOperations().size() + " Writes: " + writes,Level.WARNING);
 		
 	}
 	

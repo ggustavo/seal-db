@@ -3,10 +3,10 @@ package DBMS.transactionManager;
 
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
+
 import DBMS.Kernel;
 import DBMS.queryProcessing.MTable;
 import DBMS.queryProcessing.Tuple;
@@ -25,18 +25,15 @@ public class Transaction {
 	private boolean recoverable = true;
 	private boolean schedulable = true;
 	
-	private boolean SEND_READ_OPERATIONS_TO_lOG = false;
-	private boolean SEND_TEMP_OPERATIONS_TO_lOG = false;
-	
 	private LinkedList<TransactionOperation> operations;
-	private List<Lock> lockList;
+	//private List<Lock> lockList;
 	private List<MTable> temps;
 
 	private int idT;
 	private char state = ACTIVE;
-	private Thread thread;
-	
-	public static ArrayList<Transaction> transactionsList = new ArrayList<>();
+	private Runnable threadRunnable;
+
+	public static int TRANSACTION_COUNT = 0;
 	
 	public Transaction(boolean recoverable, boolean schedulable) {
 		
@@ -44,11 +41,10 @@ public class Transaction {
 			this.schedulable = schedulable;
 			this.recoverable = recoverable;
 			idT = Kernel.getNewID(Kernel.PROPERTIES_TRASACTION_ID);
-			transactionsList.add(this);
-			lockList = Collections.synchronizedList(new LinkedList<Lock>()); 
+		//	lockList = Collections.synchronizedList(new LinkedList<Lock>()); 
 			operations = (new LinkedList<TransactionOperation>());
-			Kernel.getScheduler().getWaitForGraph().addNode(this);
-			operations.add(new TransactionOperation(this, null, TransactionOperation.BEGIN_TRANSACTION));
+		//	Kernel.getScheduler().getWaitForGraph().addNode(this);
+		//	operations.add(new TransactionOperation(this, null, TransactionOperation.BEGIN_TRANSACTION));
 			temps = new LinkedList<MTable>();
 			
 		}
@@ -61,89 +57,98 @@ public class Transaction {
 		return new Transaction(true,true);
 	}
 	
-	public TransactionOperation lock(Tuple obj, char type) throws AcquireLockException{
-		if(!schedulable)return new TransactionOperation(this, obj, type);
-		if(!canExec())return null;
-		TransactionOperation transactionOperation = new TransactionOperation(this, obj, type);	
+	public ArrayList<Tuple> tuples = new ArrayList<Tuple>();
+	
+	public boolean lock(Tuple obj, char type) throws AcquireLockException{
+		if(!schedulable)return true;
+		if(!canExec())return false;
 		
-		try {
-			Lock lock = Kernel.getScheduler().requestLock(this, transactionOperation);
-			if(lock == null) {
-				throw new AcquireLockException();
-			}
-			if(!lock.isCanceled()){
-				lockList.add(lock);		
-			}else {
-				throw new AcquireLockException();
-			}
+		if(true)return true;
 		
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-			throw new AcquireLockException();
+		if(obj.getTable().isTemp()) {
+			return true;
 		}
-		return transactionOperation;
+		
+		if(type == Lock.READ_LOCK) {
+			return true;
+		}
+		
+		
+		if(obj.isUsed == false){
+			obj.isUsed = true;
+			tuples.add(obj);
+			obj.transactionId = getIdT();
+			return true;
+		}else if(obj.transactionId == getIdT()){
+			return true;
+		}
+		
+		
+		
+		throw new AcquireLockException();
 	}
 	
 	
 	
-	public void unlock(char tupleOperation, TransactionOperation operation, Tuple tuple, String[] beforedata, boolean isTemp){
+	public void unlock(char operationReadOrWrite, char tupleOperation, Tuple tuple, String[] beforedata, boolean isTemp){
 		
-		operation.seTupleOperation(tupleOperation);
-		if(recoverable && ((SEND_READ_OPERATIONS_TO_lOG && operation.getType() == TransactionOperation.READ_TUPLE ) || 
-				(SEND_TEMP_OPERATIONS_TO_lOG && isTemp))) {
-			operations.add(operation);			
-		}
-		
-		
-		
-		if(SEND_TEMP_OPERATIONS_TO_lOG && recoverable && operation.getType() == TransactionOperation.WRITE_TUPLE) {
-			operation.setBeforedata(beforedata);
-			operations.add(operation);
-		}
-	
 		if(isTemp && !temps.contains(tuple.getTable())){
 			temps.add(tuple.getTable());
 		}
 		
-		if(recoverable && operation.getType() == TransactionOperation.WRITE_TUPLE) {
+		if(!isTemp && recoverable && operationReadOrWrite == TransactionOperation.WRITE_TUPLE) {
+			TransactionOperation operation = new TransactionOperation(this, tuple, Lock.WRITE_LOCK);	
+			operation.seTupleOperation(tupleOperation);
 			operation.setBeforedata(beforedata);
 			operations.add(operation);
 		}
 		
-		if(schedulable)Kernel.getScheduler().unlock(tuple);
+		//if(schedulable)Kernel.getScheduler().unlock(tuple);
 	}
 	
 	public void unlockAll(){
 		if(!schedulable)return;
-		Kernel.getScheduler().unlockAll(this);
+		
+		for (Tuple tuple : tuples) {
+			tuple.isUsed = false;
+			tuple.transactionId = -1;
+		}
+		//Kernel.getScheduler().unlockAll(this);
 	}
 	
 
 	
 	public boolean execRunnable(TransactionRunnable tr){
 		if(!canExec())return false;
-		if(thread == null || !schedulable){
+		if(threadRunnable == null || !schedulable){
 			
-			thread = new Thread(new Runnable() {
+			threadRunnable = new Runnable() {
+				
+				@Override
 				public void run() {
-				try{		
+					
+					try{		
 						tr.run(Transaction.this);
-						thread = null;
+						threadRunnable = null;
 					
 					}catch(Exception e){
-						Kernel.exception(this.getClass(),e);
+						//Kernel.exception(this.getClass(),e);
 						tr.onFail(Transaction.this, e);
 						if(Kernel.getExecuteTransactions().getAllTransactionErrorsListener() != null) {
 							Kernel.getExecuteTransactions().getAllTransactionErrorsListener().onFail(Transaction.this, e);
 						}
-						thread = null;
+						threadRunnable = null;
 						return;
 							
 					}
 					
 				}
-			});
-			thread.start();
+			};
+			
+			Kernel.TRANSACTIONS_EXECUTOR.execute(threadRunnable);
+			
+			//new Thread(threadRunnable).start();
+			
 		}else{
 			if(schedulable)Kernel.log(this.getClass(),"Unfinished operations running",Level.SEVERE);
 			return false;
@@ -153,30 +158,33 @@ public class Transaction {
 	}
 	
 	public void failed(){
+		TRANSACTION_COUNT++;
 		if(!schedulable)return;
 		if(!canExec())return;
 		setState(FAILED);
-		operations.add(new TransactionOperation(this, null, TransactionOperation.ABORT_TRANSACTION));
+		//operations.add(new TransactionOperation(this, null, TransactionOperation.ABORT_TRANSACTION));
 		if(recoverable)Kernel.getRecoveryManager().undoTransaction(this);
 		clearTempTables();
 		unlockAll();
 	}
 	
 	public void commit() {
+		TRANSACTION_COUNT++;
 		if(!schedulable)return;
 		if(!canExec())return;
 		setState(COMMITTED);
-		operations.add(new TransactionOperation(this, null, TransactionOperation.COMMIT_TRANSACTION));
+		//operations.add(new TransactionOperation(this, null, TransactionOperation.COMMIT_TRANSACTION));
 		if(recoverable)Kernel.getRecoveryManager().commitTransaction(this);
 		clearTempTables();
 		unlockAll();
 	}
 	
 	public void abort(){
+		TRANSACTION_COUNT++;
 		if(!schedulable)return;
 		if(!canExec())return;
 		setState(ABORTED);
-		operations.add(new TransactionOperation(this, null, TransactionOperation.ABORT_TRANSACTION));
+		//operations.add(new TransactionOperation(this, null, TransactionOperation.ABORT_TRANSACTION));
 		if(recoverable)Kernel.getRecoveryManager().undoTransaction(this);
 		clearTempTables();
 		unlockAll();
@@ -205,19 +213,19 @@ public class Transaction {
 		return operations;
 	}
 	
-	public List<Lock> getLockList() {
-		return lockList;
+//	public List<Lock> getLockList() {
+//		return lockList;
+//	}
+//
+//	public void setLockList(List<Lock> lockList) {
+//		this.lockList = lockList;
+//	}
+	public Runnable getThread() {
+		return threadRunnable;
 	}
 
-	public void setLockList(List<Lock> lockList) {
-		this.lockList = lockList;
-	}
-	public Thread getThread() {
-		return thread;
-	}
-
-	public void setThread(Thread thread) {
-		this.thread = thread;
+	public void setThread(Runnable thread) {
+		this.threadRunnable = thread;
 	}
 
 	public boolean isRecoverable() {

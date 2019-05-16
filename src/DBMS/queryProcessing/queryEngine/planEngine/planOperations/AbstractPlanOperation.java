@@ -66,7 +66,8 @@ public abstract class AbstractPlanOperation{
 		executeOperation(resultTable);
 		this.resultTable = resultTable;
 		
-
+		//System.out.println(getName() + " size: " + resultTable.getNumberOfTuples(getPlan().getTransaction()));
+		//System.out.println(getName() + " " + resultTable.getTuples());
 		return resultTable;
 		
 	}

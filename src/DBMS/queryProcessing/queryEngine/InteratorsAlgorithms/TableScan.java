@@ -2,6 +2,7 @@ package DBMS.queryProcessing.queryEngine.InteratorsAlgorithms;
 
 
 import java.util.Iterator;
+import java.util.Map;
 
 import DBMS.queryProcessing.MTable;
 import DBMS.queryProcessing.Tuple;
@@ -12,28 +13,29 @@ public class TableScan{
 
 	
 	private MTable table;
-	private java.util.List<Tuple> tuples;
-	private Iterator<Tuple> interator;
+	private Map<String,Tuple> tuples;
+	private Iterator<Map.Entry<String, Tuple>>  interator;
 	
 	private Transaction transaction;
 	
 	public TableScan (Transaction transaction, MTable table){
 		this.table = table;
 		this.transaction = transaction;
-		this.tuples = table.getTuples();
-		this.interator = tuples.iterator();
+		this.tuples = table.getTuplesHash();
+		this.interator = tuples.entrySet().iterator();
 	}
 	
 
 	public void reset(){
-		interator = tuples.iterator();
+		interator = tuples.entrySet().iterator();
 	}
 		
 	public Tuple nextTuple() throws AcquireLockException {
 		
 		if(interator.hasNext()) {
 			
-			String id = interator.next().getTupleID();
+			String id = interator.next().getValue().getTupleID();
+			
 			if(id == null)
 				return null;
 			

@@ -16,6 +16,9 @@ public class Tuple implements Serializable{
 	private Node<Tuple> node;
 	private char operation = Lock.READ_LOCK;
 	
+	public boolean isUsed = false;
+	public long transactionId = -1;
+	
 	public Tuple(MTable table, String tupleId, String... data) {
 		this.data = data;
 		this.tupleID = tupleId;

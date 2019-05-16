@@ -6,12 +6,12 @@ import java.io.RandomAccessFile;
 
 import DBMS.fileManager.dataAcessManager.file.DataConvert;
 
-public class FileRedoLog implements LogHandle {
+public class SequentialLog implements LogHandle {
 	
 	
 	public RandomAccessFile randomAccessFile;
 	
-	public FileRedoLog(String file) {
+	public SequentialLog(String file) {
 		try {
 			randomAccessFile = new RandomAccessFile(file, "rws");			
 		} catch (FileNotFoundException e) {
@@ -79,27 +79,48 @@ public class FileRedoLog implements LogHandle {
 	}
 	
 	
+
+	
+	
+	public String readRecord(long pointer) throws IOException {
+		
+		byte[] recordSizeBytes = new byte[4];
+		recordSizeBytes = readFile(pointer, recordSizeBytes);
+		
+		if (recordSizeBytes != null) {
+			int size = DataConvert.byteToInt(DataConvert.readBytes(recordSizeBytes, 0, 4));
+			
+			return new String(readFile(pointer + 4, new byte[size]));
+		}
+		return null;
+	}
+	
 	@Override
 	public void interator(LogInterator interator) {
 		interator(interator, true); 
 	}
-	
 	@Override
 	public void interator(LogInterator interator, boolean end) {
-		
-		long currentPointer = end ? getPointer() : 0;
+		interator(-1, interator, end);
+	}
 	
+	public void interator(long currentPointer, LogInterator interator, boolean end) {
+		
+		if(currentPointer == -1) {
+			currentPointer = end ? getPointer() : 0;			
+		}
+		
 		try {
 			char action = end ? LogInterator.PREV : LogInterator.NEXT;
 			
 			while(action != LogInterator.STOP){
 								
 				if (action == LogInterator.NEXT) {
-					
 					byte[] recordSizeBytes = new byte[4];
 					recordSizeBytes = readFile(currentPointer, recordSizeBytes);
 					
 					if (recordSizeBytes == null) {
+						
 						return;
 						//action = interator.readRecord(-1, -1, ' ', null, -1);
 					}else {
@@ -156,12 +177,10 @@ public class FileRedoLog implements LogHandle {
 			interator.error(e);
 		}
 		
-
+		
 	}
 	
-	
-	
-	
+
 	
 	private byte[] readFile(long pointer, byte[]block) throws IOException{
 			if(pointer<0)return null;
@@ -214,4 +233,10 @@ public class FileRedoLog implements LogHandle {
 		System.out.println("finish");
 	}
 	*/
+	
+//	public static void main(String[] args) throws IOException {
+//		SequentialLog s = new SequentialLog("database\\log.b");
+//		
+//		System.out.println(s.readRecord(0));
+//	}
 }

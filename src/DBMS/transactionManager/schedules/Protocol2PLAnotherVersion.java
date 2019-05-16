@@ -17,27 +17,27 @@ public class Protocol2PLAnotherVersion extends AbstractScheduler{
 	
 	public  void unlockAll(Transaction transaction){
 		
-
-		List<Lock> locks = transaction.getLockList();
-	
-		
-		for (Lock lock : locks) {
-			LockManager lockManager = lockMap.get(lock.getTuple());
-			if(lockManager!=null){
-				
-				List<Lock> lockList = lockManager.getLockList();
-				List<Lock> lockWaitList = lockManager.getLockWaitList();	
-				lockList.remove(lock);
-				lockWaitList.remove(lock);
-				if(lockList.isEmpty() && lockWaitList.isEmpty()){
-					lockMap.remove(lock.getTuple());
-					
-				}
-				
-			}
-		}
-	
-		waitForGraph.removeNode(waitForGraph.findNode(transaction));
+//
+//		List<Lock> locks = transaction.getLockList();
+//	
+//		
+//		for (Lock lock : locks) {
+//			LockManager lockManager = lockMap.get(lock.getTuple());
+//			if(lockManager!=null){
+//				
+//				List<Lock> lockList = lockManager.getLockList();
+//				List<Lock> lockWaitList = lockManager.getLockWaitList();	
+//				lockList.remove(lock);
+//				lockWaitList.remove(lock);
+//				if(lockList.isEmpty() && lockWaitList.isEmpty()){
+//					lockMap.remove(lock.getTuple());
+//					
+//				}
+//				
+//			}
+//		}
+//	
+//		waitForGraph.removeNode(waitForGraph.findNode(transaction));
 		
 	}
 	

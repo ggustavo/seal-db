@@ -28,6 +28,9 @@ public abstract class AbstractJoinAlgorithm {
 		
 		for (Condition aOv : attributesOperatorsValues) {
 			
+			//System.out.println(tr.getStringData() + " " + ts.getStringData());
+			//System.out.println("COMPARE: " + tr.getColunmData(tableLeft.getIdColumn(aOv.getAtribute())) + " " + aOv.getOperator() + " " + ts.getColunmData(tableRight.getIdColumn(aOv.getValue())));
+			
 			if(AbstractPlanOperation.makeComparison(tr.getColunmData(tableLeft.getIdColumn(aOv.getAtribute())), aOv.getOperator(), ts.getColunmData(tableRight.getIdColumn(aOv.getValue())))){
 				isInsertable = true;
 			}else{

@@ -194,6 +194,10 @@ public class Plan {
 		this.optionalMessage = optionalMessage;
 	}
 
-
+	
+	public String toString() {
+		if(root!=null)return root.getName();
+		return "";
+	}
 	
 }

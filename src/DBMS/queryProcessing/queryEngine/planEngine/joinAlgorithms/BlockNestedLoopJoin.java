@@ -21,8 +21,8 @@ public class BlockNestedLoopJoin extends AbstractJoinAlgorithm {
 			tableScanRight.reset();
 			while ((tr = tableScanRight.nextTuple()) != null) {
 
-				if (match(tr, ts)) {
-					resultTable.writeTuple(transaction, tr.getStringData() + ts.getStringData());
+				if (match(ts, tr)) {
+					resultTable.writeTuple(transaction, ts.getStringData() + tr.getStringData());
 				}
 
 			}

@@ -1,7 +1,6 @@
 package tests;
 import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.Random;
 
 import DBMS.Kernel;
@@ -20,17 +19,19 @@ public class TPCCBenchmark implements Callback{
 	public int numberOfTransactions;
 	public boolean serial;
 	public int tIds = 1;
+	
+	public static boolean debug = false;
 
 	long lStartTime;
 	
 	public void startBenchmark(){
 			
 		System.out.println("\n\n <... Starting TPCC Benchmark ...>");
-		System.out.println("Number of Transactions:" + numberOfTransactions);
+		System.out.println("Number of Transactions: " + numberOfTransactions);
 		System.out.println("Serial: " + serial);
 		System.out.println();
 		try {
-			Thread.sleep(2000);
+			Thread.sleep(1000);
 		} catch (InterruptedException e) {
 		
 			e.printStackTrace();
@@ -79,53 +80,33 @@ public class TPCCBenchmark implements Callback{
 			public void run(Transaction transaction) throws AcquireLockException {
 				if(serial==false)((Transaction)transaction).setIdT(tIds++);
 				
-				long lStartTime = System.nanoTime();
-				boolean all = true;
+				//long lStartTime = System.nanoTime();
+				boolean all = false;
+				int a = gen.nextInt(2);				
 				
-				int a = gen.nextInt(5);
+				if(all||a==0)eQ1(transaction);
+				if(all||a==1)eQ2(transaction);
 				
-				if(all||a==1)eQ1(transaction);
-				if(all||a==2)eQ2(transaction);
-				if(all||a==3)eQ3(transaction);
-				if(all||a==4)eQ4(transaction);
-				if(all||a==5)eQ5(transaction);
 				
-//				
-//				try {
-//					if(transaction.getIdT() % 10 ==0) {
-//						Thread.sleep(gen.nextInt(5000));
-//					}
-//					
-//					if(transaction.getIdT() % 30 ==0) {
-//						Thread.sleep(gen.nextInt(10000));
-//					}
-//
-//					if(transaction.getIdT() % 90 ==0) {
-//						Thread.sleep(gen.nextInt(20000));
-//					}
-//				
-//					
-//				} catch (InterruptedException e) {
-//
-//					e.printStackTrace();
-//				}
-//				if(all||a==1)eQ3(transaction);
-//				if(all||a==2)eQ3(transaction);
-//				if(all||a==3)eQ3(transaction);
-//				if(all||a==4)eQ3(transaction);
-//				if(all||a==5)eQ3(transaction);
-		
+				//if(all||a==2)eQ4(transaction);
+				
+				//if(all||a==3)eQ5(transaction);
+			
+				//	if(all||a==4)eQ3(transaction);
 				
 				transaction.commit();
 				transaction.setState(Transaction.COMMITTED);
-				System.out.println("\n <... Finish Transaction T"+transaction.getIdT()+" ...> total time: " + (System.nanoTime() - lStartTime) / 1000000 + " ms");
+				//if(debug)System.out.println("\n <... Finish Transaction T"+transaction.getIdT()+" ...> total time: " + (System.nanoTime() - lStartTime) / 1000000 + " ms");
 				if(call!=null)call.call(transaction);
 			}
 			
 			@Override
 			public void onFail(Transaction transaction, Exception e) {
-				System.out.println("ABORT ("+transaction.getIdT()+")-> "+e.getMessage());
+				if(debug)
+					System.out.println("ABORT ("+transaction.getIdT()+")-> "+e.getMessage());
+			//	e.printStackTrace();
 				transaction.abort();
+				if(call!=null)call.call(transaction);
 				//System.exit(0);
 			}
 		},true,true);
@@ -139,89 +120,169 @@ public class TPCCBenchmark implements Callback{
 		return values[gen.nextInt(values.length)];
 	}
 	
+	
+	public static String values[] = { "BAR", "OUGHT", "ABLE", "PRI", "PRES", "ESE", "ANTI", "CALLY", "ATION", "EING" };
+	
+	public static String getLastName(int value) {
+		value = Math.min(999, value);
+		return "'"+(values[(int)(value/100)] +  values[(int)((value/10)%10)] +  values[(int)(value%10)]+"'");
+	}
+	
+	
 	public void eQ1(Transaction transaction) throws AcquireLockException {
-//		String w_id = "1";
-//		String d_id = getRandom("4","5","9","1","8","2","6","3","7","10");
-//		String c_id = ""+gen.nextInt(3000) + 1;
-//		String o_ol_cnt = getRandom("11","8","10","5","15","6","9","7","12","13","14"); 
-//		String o_all_local = "1";		
-//		
 		String w_id = "1";
-		String d_id = "5";
-		String c_id = "1000";
-		String o_ol_cnt = "14"; 
-		String o_all_local = "1";	
+	//	String d_id = getRandom("4","5","9","1","8","2","6","3","7","10");
+		String d_id = "1";
+		String c_id = ""+(gen.nextInt(3000) + 1);
+		String o_ol_cnt = getRandom("11","8","10","5","15","6","9","7","12","13","14"); 
+		String o_all_local = "1";		
+		
+//		String w_id = "1";
+//		String d_id = "5";
+//		String c_id = "1000";
+//		String o_ol_cnt = "14"; 
+//		String o_all_local = "1";	
 //		
 		calcTime(() -> Q1(transaction, w_id, d_id, c_id, o_ol_cnt, o_all_local ),"T"+transaction.getIdT()+"-Q1");
 	}
 	
 	public void eQ2(Transaction transaction) throws AcquireLockException {
 		
-//		String w_id = "1";
-//		String h_amount = "10";
-//		String d_id = getRandom("4","5","9","1","8","2","6","3","7","10");
-//		String c_last = ""+gen.nextInt(1000) + 1; 
-//		String c_d_id = getRandom("4","5","9","1","8","2","6","3","7","10");
-//		String c_w_id = w_id;
-//		String c_id = ""+gen.nextInt(3000) + 1;
-//		boolean byname = gen.nextBoolean();
-		
 		String w_id = "1";
 		String h_amount = "10";
-		String d_id = "5";
-		String c_last = "599";
-		String c_d_id = "9";
+		String d_id = getRandom("4","5","9","1","8","2","6","3","7","10");
+		String c_last = ""+(gen.nextInt(1000) + 1); 
+		String c_d_id = getRandom("4","5","9","1","8","2","6","3","7","10");
 		String c_w_id = w_id;
-		String c_id = "2400";
-		boolean byname = true;
-//		
+		String c_id = ""+(gen.nextInt(3000) + 1);
+		boolean byname = gen.nextBoolean();
+		
+//		String w_id = "1";
+//		String h_amount = "10";
+//		String d_id = "5";
+//		String c_last = "599";
+//		String c_d_id = "9";
+//		String c_w_id = w_id;
+//		String c_id = "2400";
+//		boolean byname = true;
+////		
 		calcTime(() -> Q2(transaction,w_id, h_amount, d_id, c_last, c_d_id, c_w_id, c_id, byname),"T"+transaction.getIdT()+"-Q2");
 	}
 	
 	public void eQ3(Transaction transaction) throws AcquireLockException {
-//		String w_id = "1";
-//		String d_id = getRandom("4","5","9","1","8","2","6","3","7","10");
-//		String c_id = ""+gen.nextInt(3000) + 1;
-//		String c_last = ""+gen.nextInt(1000) + 1; 
-//		boolean byname = gen.nextBoolean();
-		
 		String w_id = "1";
-		String d_id = "4";
-		String c_id = "2300";
-		String c_last = "559";
-		boolean byname = true;
+		String d_id = getRandom("4","5","9","1","8","2","6","3","7","10");
+		String c_id = ""+(gen.nextInt(3000) + 1);
+		String c_last = ""+(gen.nextInt(1000) + 1); 
+		boolean byname = gen.nextBoolean();
+		
+//		String w_id = "1";
+//		String d_id = "4";
+//		String c_id = "2300";
+//		String c_last = "559";
+//		boolean byname = true;
 		
 		calcTime(() -> Q3(transaction,w_id, d_id, c_id,c_last, byname),"T"+transaction.getIdT()+"-Q3");	
 	}
 	
 	public void eQ4(Transaction transaction) throws AcquireLockException {
-//		String w_id = "1"; 
-//		String o_carrier_id = getRandom("4", "5", "NULL", "9","1","8","2","6","3","7","10");
 		
 		String w_id = "1"; 
-		String o_carrier_id ="8";
+		String o_carrier_id = getRandom("4", "5", "NULL", "9","1","8","2","6","3","7","10");
+		
+		//String w_id = "1"; 
+		//String o_carrier_id ="8";
 		
 		calcTime(() -> Q4(transaction, w_id, o_carrier_id),"T"+transaction.getIdT()+"-Q4");
 	}
 	
 	public void eQ5(Transaction transaction) throws AcquireLockException {
 
-//		String w_id = "1";
-//		String d_id = getRandom("4","5","9","1","8","2","6","3","7","10");
-//		
 		String w_id = "1";
-		String d_id = "9";
+		String d_id = getRandom("4","5","9","1","8","2","6","3","7","10");
+		
+//		String w_id = "1";
+//		String d_id = "9";
 		
 		calcTime(() -> Q5(transaction, w_id, d_id),"T"+transaction.getIdT()+"-Q5");
 
 	}
 	
+	
+	
+	
+	public static void Q1_v2(Transaction transaction, String w_id, String d_id, String c_id, String o_ol_cnt, String o_all_local ) throws AcquireLockException { 
+		String sql = " UPDATE district SET d_next_o_id = "+ ((d_id) + 1) +
+				 "  WHERE d_id = " + d_id+ " AND d_w_id = " + w_id;
+		
+		execSQL(sql, transaction);
+	
+		sql =  " INSERT INTO orders (o_id, o_d_id, o_w_id, o_c_id,o_entry_d, o_ol_cnt, o_all_local) "+
+			   " VALUES ("+((d_id) + 1) +", "+d_id+", "+w_id+", "+c_id+", "+ "'Date2019'" +", "+o_ol_cnt+", "+o_all_local+");";
+		
+		execSQL(sql, transaction);
+		
+		sql =  "insert into -new_order- (no_o_id, no_d_id, no_w_id) VALUES ("+((d_id) + 1)+", "+d_id+", "+d_id+");";
+		sql = sql.replaceAll("-", " ");
+		
+		execSQL(sql, transaction);
+		
+			
+	}
+	
+	public static void Q2_v2(Transaction transaction, String w_id, String h_amount, String d_id, String c_last, String c_d_id, String c_w_id, String c_id, boolean byname) throws AcquireLockException {
+		c_last = getLastName(Integer.parseInt(c_last));
+		
 
-	@SuppressWarnings("deprecation")
+			
+		String sql =  "UPDATE warehouse SET w_ytd = " + h_amount+ //w_ytd = w_ytd + h_amount
+					  "  WHERE w_id= "+w_id+";"; 
+		
+		execSQL(sql, transaction);
+		
+		sql =  "UPDATE  district  SET d_ytd  = " + h_amount + //d_ytd  = d_ytd  + h_amount
+				" WHERE d_w_id= " + w_id + " AND d_id="+d_id; 
+	
+		execSQL(sql, transaction);
+		
+		String c_balance = "-10";
+		String c_new_data = "FFF040E0ABB1";
+		
+		
+		sql = " UPDATE customer "+
+				 " SET c_balance = " +c_balance+", c_data = "+c_new_data +
+				 "  WHERE c_w_id = "+c_w_id+" AND c_d_id = "+c_d_id+" AND "+
+				 " c_id = "+c_id+"; "; 
+				
+				execSQL(sql, transaction);
+
+
+		sql = " UPDATE customer SET c_balance = "+ c_balance +
+	 					"  WHERE c_w_id = "+c_w_id+" AND c_d_id = "+c_d_id+" AND "+
+	 					" c_id = " + c_id+ ";"; 
+					 
+					execSQL(sql, transaction);
+
+
+		String h_data = "FFF040E0ABB1355ACCE";
+					
+		sql = " INSERT INTO history (h_c_d_id, h_c_w_id, h_c_id, h_d_id, " +
+						" h_w_id, h_date, h_amount, h_data) " +
+						" VALUES ("+c_d_id+", "+c_w_id+", "+c_id+", "+d_id+", " +
+						w_id+" , "+"'Date2019'"+", " + h_amount + ", "+h_data+");  ";
+				
+				execSQL(sql, transaction);
+		
+	}
+	
+	
+	
+	
+	
 	public static void Q1(Transaction transaction, String w_id, String d_id, String c_id, String o_ol_cnt, String o_all_local ) throws AcquireLockException { 
 		
 		
-		String datetime = new Date().getYear()+"";
+		String datetime = "'Date2019'";
 
 		
 		String sql = " SELECT c_discount, c_last, c_credit, w_tax " +
@@ -237,10 +298,10 @@ public class TPCCBenchmark implements Callback{
 		
 		if(execAndIntoSQL(sql,transaction,c_discount,c_last,c_credit, w_tax) == null) return;
 	
-//		System.out.println(c_discount);
-//		System.out.println(c_last);
-//		System.out.println(c_credit);
-//		System.out.println(w_tax);
+//		if(debug)System.out.println(c_discount);
+//		if(debug)System.out.println(c_last);
+//		if(debug)System.out.println(c_credit);
+//		if(debug)System.out.println(w_tax);
 		
 		IntoVariable d_next_o_id = new IntoVariable();
 		IntoVariable d_tax = new IntoVariable();
@@ -252,8 +313,8 @@ public class TPCCBenchmark implements Callback{
 				
 		if(execAndIntoSQL(sql, transaction, d_next_o_id,d_tax) == null) return;
 		
-//		System.out.println(d_next_o_id);
-//		System.out.println(d_tax);
+//		if(debug)System.out.println(d_next_o_id);
+//		if(debug)System.out.println(d_tax);
 		
 		
 
@@ -278,8 +339,8 @@ public class TPCCBenchmark implements Callback{
 		
 		
 		
-		String supware[] = {"1","2","6"}; //???
-		String itemid[] = {"1","2","6"};  //???
+		String supware[] = {"1","2","6"}; 
+		String itemid[] = {"1","2","6"};  
 		String qty[] = {"1","2","6"};
 		
 		String iname[] = new String[new Integer(o_ol_cnt)];
@@ -312,9 +373,9 @@ public class TPCCBenchmark implements Callback{
 			
 			if(execAndIntoSQL(sql, transaction, i_price, i_name, i_data) == null) continue;
 			
-//			System.out.println(i_price);
-//			System.out.println(i_name);
-//			System.out.println(i_data);
+//			if(debug)System.out.println(i_price);
+//			if(debug)System.out.println(i_name);
+//			if(debug)System.out.println(i_data);
 						
 			 price[ol_number-1] = i_price.v; 
 			 iname[ol_number-1] = i_name.v; //strncpy(iname[ol_number-1],i_name,24);
@@ -410,8 +471,10 @@ public class TPCCBenchmark implements Callback{
 	}
 
 	public static void Q2(Transaction transaction, String w_id, String h_amount, String d_id, String c_last, String c_d_id, String c_w_id, String c_id, boolean byname) throws AcquireLockException {
+		c_last = getLastName(Integer.parseInt(c_last));
+		
+		String datetime = "'Date2019'";
 			
-		String datetime = new Date().toString();
 		
 		String sql =  "UPDATE warehouse SET w_ytd = " + h_amount+ //w_ytd = w_ytd + h_amount
 					  "  WHERE w_id= "+w_id+";"; 
@@ -485,7 +548,7 @@ public class TPCCBenchmark implements Callback{
 			Tuple tuple = cursor.nextTuple();
 			
 			for (int n=0; n<Integer.parseInt(namecnt.v)/2  && tuple!=null; n++){ 
-				//System.out.println(Arrays.toString(tuple.getData()));
+				//if(debug)System.out.println(Arrays.toString(tuple.getData()));
 				tuple = cursor.nextTuple();
 			}
 			
@@ -545,7 +608,7 @@ public class TPCCBenchmark implements Callback{
 	 			strncat(c_new_data,c_data,500-strlen(c_new_data)); 
 				 */
 				
-				String c_new_data = c_data +" "+ c_id +" "+c_d_id +" "+c_w_id +" "+d_id +" "+ w_id +" "+h_amount +" ";
+				String c_new_data = c_data +"h"+ c_id +"h"+c_d_id +"h"+c_w_id +"h"+d_id +"h"+ w_id +"h"+h_amount +"h";
 				
 				sql = " UPDATE customer "+
 				 " SET c_balance = " +c_balance+", c_data = "+c_new_data +
@@ -564,7 +627,8 @@ public class TPCCBenchmark implements Callback{
 					
 				}
 				
-				String h_data = w_name.v + " "+ d_name.v;
+				//String h_data = w_name.v + " "+ d_name.v;
+				String h_data = "'"+(w_name.v + d_name.v).replaceAll("'","")+"'";
 				
 				sql = " INSERT INTO history (h_c_d_id, h_c_w_id, h_c_id, h_d_id, " +
 						" h_w_id, h_date, h_amount, h_data) " +
@@ -779,33 +843,33 @@ public class TPCCBenchmark implements Callback{
 	}
 
 	public static void showResult(Transaction transaction, MTable result, int lines) throws AcquireLockException {
-		System.out.println("\n---------------------------------------- " + result.getName()
+		if(debug)if(debug)System.out.println("\n---------------------------------------- " + result.getName()
 				+ "---------------------------------------- ");
-		System.out.println(Arrays.toString(result.getColumnNames()));
+		if(debug)System.out.println(Arrays.toString(result.getColumnNames()));
 		int count = 0;
 		TableScan tr2 = new TableScan(transaction, result);
 		Tuple tuple = tr2.nextTuple();
 		while (tuple != null) {
-			System.out.println(Arrays.toString(tuple.getData()));
+			if(debug)System.out.println(Arrays.toString(tuple.getData()));
 			tuple = tr2.nextTuple();
 			count++;
 			if (lines > 0 && count == lines)
 				break;
 		}
-		System.out
+		if(debug)System.out
 				.println("\n--" + count + " tuples -----------------------------------------------------------------");
 	}
 
 
 	public static void calcTime(RunningCallback call, String name) throws AcquireLockException {
-		System.out.println("\n---> " + name + " Running...");
-		long lStartTime = System.nanoTime();
+		//if(debug)System.out.println("\n---> " + name + " Running...");
+		//long lStartTime = System.nanoTime();
 		
 		call.run();
 		
-		long lEndTime = System.nanoTime();
-		long output = lEndTime - lStartTime;
-		System.out.println("<--- Finish " + name + " Time: " + output / 1000000 + " ms");
+		//long lEndTime = System.nanoTime();
+		//long output = lEndTime - lStartTime;
+		//if(debug)System.out.println("<--- Finish " + name + " Time: " + output / 1000000 + " ms");
 	}
 
 	public static int strstr(String haystack, String needle) {
@@ -836,11 +900,12 @@ public class TPCCBenchmark implements Callback{
 	}
 
 	public static MTable execSQL(String sql, Transaction transaction) throws AcquireLockException {
-		System.out.println("T"+transaction.getIdT()+" Exec SQL: " + sql);
+		if(debug)System.out.println("T"+transaction.getIdT()+" Exec SQL: " + sql);
 		try {
 			Plan plan = new Parse().parseSQL(sql, Kernel.getCatalog().getSchemabyName("tpcc"));
 			plan.setTransaction(transaction);
 			MTable result = plan.execute();
+			//System.out.println(plan.getOptionalMessage());
 			return result;
 
 		} catch (SQLException e) {
@@ -858,21 +923,22 @@ public class TPCCBenchmark implements Callback{
 	}
 
 	public static IntoVariable[] execAndIntoSQL(String sql, Transaction transaction, IntoVariable... columns) throws AcquireLockException {
-		System.out.println("T"+transaction.getIdT()+" Exec SQL: " + sql);
+		if(debug)System.out.println("T"+transaction.getIdT()+" Exec SQL: " + sql);
 		try {
 			Plan plan = new Parse().parseSQL(sql, Kernel.getCatalog().getSchemabyName("tpcc"));
+			
 			plan.setTransaction(transaction);
 			// showResult(transaction, plan.execute());
 			MTable result = plan.execute();
-			// System.out.println(Arrays.toString(result.getColumnNames()));
+			// if(debug)System.out.println(Arrays.toString(result.getColumnNames()));
 			String data = getFirstResult(transaction, result);
 			if (data == null) {
-				System.out.println("^^^^^ [null values result] ^^^^^");
+				if(debug)System.out.println("^^^^^ [null values result] ^^^^^");
 				return null;
 			}
-			// System.out.println(data);
+			// if(debug)System.out.println(data);
 			String values[] = data.split("\\|");
-			// System.out.println(columns.length + " - " + values.length);
+			// if(debug)System.out.println(columns.length + " - " + values.length);
 
 			for (int i = 0; i < columns.length; i++) {
 				columns[i].v = values[i];

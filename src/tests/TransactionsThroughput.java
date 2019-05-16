@@ -10,9 +10,7 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
-import DBMS.Kernel;
 import DBMS.transactionManager.Transaction;
-import DBMS.transactionManager.serializationGraph.TransactionNode;
 
 
 public class TransactionsThroughput {
@@ -46,26 +44,20 @@ public class TransactionsThroughput {
 			
 			@Override
 			public void run() {
-				boolean firts = false;
+				
 				while(true) {
 					int value = 0;
 					try {
-						
-						for (Transaction t : Transaction.transactionsList) {
-							if(!t.isFinish() && t.getIdT() != 0) {
-								value++;
-							}
-						}
-						
-						series.add(x++, value);
+						value = Transaction.TRANSACTION_COUNT;
+						Transaction.TRANSACTION_COUNT = 0;
+						series.add((x++), value);
 						window.repaint();
-						
 					}catch (Exception e) {
 						
 					}
 					
 					try {
-						Thread.sleep(100);
+						Thread.sleep(1000);
 					} catch (InterruptedException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();

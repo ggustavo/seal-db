@@ -11,6 +11,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
 import java.util.Vector;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Level;
 
 import DBMS.fileManager.catalog.Initializer;
@@ -32,13 +34,15 @@ public abstract class Kernel {
 	public static long MEMORY_SIZE_BYTES = 0;
 	public static int MEMORY_SIZE_TUPLES = 50;
 	
+	
+	
 	public static boolean ENABLE_RECOVERY = true;
 	public static boolean ENABLE_HOT_COLD_DATA_ALGORITHMS = true;
 	public static boolean ENABLE_LOG_REQUESTS = true;
 	
 	public static String DATABASE_FILES_FOLDER;
 		
-	public static final String LOG_FILE_NAME = "log.b";
+	public static final String LOG_FILE_NAME = "log.d";
 
 	private static CatalogAccess catalog = new CatalogAccess();
 	private static AbstractScheduler scheduler = new Protocol2PL();
@@ -50,6 +54,9 @@ public abstract class Kernel {
 	private static MemoryAcessManager memoryAcessManager = new MemoryAcessManager();
 	
 	
+	public static ExecutorService TRANSACTIONS_EXECUTOR;
+	public static int TRANSACTION_NUMBER_OF_WORKERS = 4;
+	
 	public static final String PROPERTIES_MEMORY_SIZE_BYTES = "memory_size";
 	public static final String PROPERTIES_TRASACTION_ID = "last_id_trasaction";
 	public static final String PROPERTIES_CONNECTION_ID = "last_id_connection";
@@ -57,10 +64,22 @@ public abstract class Kernel {
 	
 	public static final String DATABASE_FINALIZE_STATE_OK = "ok";
 	public static final String DATABASE_FINALIZE_STATE_ERROR = "error";
+	
+	
+	public static final char SEQUENTIAL_lOG = '1';
+	public static final char FULL_TREE_lOG = '2';
+	public static final char HYBRID_TREE_lOG = '3';
+	public static final char PARALLEL_HYBRID_TREE_lOG = '4';
+
+	public static char LOG_STRATEGY = SEQUENTIAL_lOG;
+	
 
 	public static void start() {
+		TRANSACTIONS_EXECUTOR = Executors.newFixedThreadPool(TRANSACTION_NUMBER_OF_WORKERS);
+		
 		Kernel.log(Kernel.class, "SEAL-DB Initializing", Level.CONFIG);
-
+		Kernel.log(Kernel.class, "Number of Transactions Works: " + TRANSACTION_NUMBER_OF_WORKERS, Level.CONFIG);
+		
 		DATABASE_FILES_FOLDER = createDirectory("database");
 		loadProperties();
 		

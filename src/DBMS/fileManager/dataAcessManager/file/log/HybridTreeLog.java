@@ -1,7 +1,6 @@
 package DBMS.fileManager.dataAcessManager.file.log;
 
 import java.io.File;
-import java.util.LinkedList;
 import java.util.SortedMap;
 
 import org.apache.jdbm.DB;
@@ -11,18 +10,21 @@ import DBMS.Kernel;
 
 
 
-public class IndexLog implements LogHandle{
+public class HybridTreeLog implements LogHandle{
 
 	private int LAST_LSN = -1;
 	private static final int LAST_LSN_KEY = 1;
 	
-	private SortedMap<String, LinkedList<String>> map;
+	private SortedMap<String, Long> map;
 	private SortedMap<Integer, Integer> meta;
 	private DB db;
 	
-	public IndexLog(String file) {
+	private SequentialLog sequentialLog;
 	
-		db = DBMaker.openFile(Kernel.DATABASE_FILES_FOLDER+ File.separator + "index_log")
+	public HybridTreeLog(String file) {
+		sequentialLog = new SequentialLog(file);
+		
+		db = DBMaker.openFile(Kernel.DATABASE_FILES_FOLDER+ File.separator + "hybrid_tree_log")
 				.disableTransactions()
 				.closeOnExit()
 				.useRandomAccessFile()
@@ -49,18 +51,14 @@ public class IndexLog implements LogHandle{
 	public synchronized void append(int lsn, int trasaction, char operation, String tupleID, String obj) {
 		
 		if(tupleID == null) return;
-		String record =  lsn + LOG_SEPARATOR
-				   + trasaction  + LOG_SEPARATOR
-				   + operation  + LOG_SEPARATOR
-				   + obj;
 		
-		LinkedList<String> list = map.get(tupleID);
-		if(list==null) {
-			list = new LinkedList<>();
+	
+		long pointer = sequentialLog.getPointer();
+		sequentialLog.append(lsn, trasaction, operation, tupleID, obj);
 			
-		}
-		list.add(record);
-		map.put(tupleID, list);
+
+		map.put(tupleID, pointer);
+		
 		meta.put(LAST_LSN_KEY, lsn);
 		db.commit();
 	}
@@ -76,24 +74,31 @@ public class IndexLog implements LogHandle{
 	}
 
 	public void interator(LogInterator interator, boolean end) {
-		
+
+		@SuppressWarnings("unused")
 		char action = end ? LogInterator.PREV : LogInterator.NEXT;
+		try {
+
+			for (Long pointer : map.values()) {
+				
+
+				String record = sequentialLog.readRecord(pointer);
 		
-		for (LinkedList<String> l : map.values()) {
-			//System.out.println("(l) -> " + l.toString());
+				String values[] = record.split(LOG_SEPARATOR);
+				int lsn = Integer.parseInt(values[0]);
+				int trasaction = Integer.parseInt(values[1]);
+				char operation = values[2].charAt(0);
+				long filePointer = -1;
 
-			String record = l.getLast();
+				action = interator.readRecord(lsn, trasaction, operation, values[3], filePointer);
 
-			String values[] = record.split(LOG_SEPARATOR);
-			int lsn = Integer.parseInt(values[0]);
-			int trasaction = Integer.parseInt(values[1]);
-			char operation = values[2].charAt(0);
-			long filePointer = -1;
-
-			action = interator.readRecord(lsn, trasaction, operation, values[3], filePointer);
-			
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		
+
 	}
+		
 
 }
