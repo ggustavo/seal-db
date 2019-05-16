@@ -13,7 +13,7 @@ public class TestTPCC {
 	public static void main(String[] args) {
 		try {
 			
-			Kernel.ENABLE_RECOVERY = true;	
+			//Kernel.ENABLE_RECOVERY = true;	
 			
 			Kernel.ENABLE_LOG_REQUESTS = false;
 			Kernel.ENABLE_HOT_COLD_DATA_ALGORITHMS = false;
@@ -41,10 +41,10 @@ public class TestTPCC {
 		//	Kernel.getMemoryAcessManager().setAlgorithm(new LRU2Q());
 			Kernel.start(); 
 			
-			TransactionsThroughput.start();
+			//TransactionsThroughput.start();
 			
 			TPCCBenchmark benchmark = new TPCCBenchmark();
-			benchmark.numberOfTransactions = 1000000;
+			benchmark.numberOfTransactions = 100;
 			benchmark.serial = false;	
 			benchmark.startBenchmark();
 			

@@ -82,17 +82,18 @@ public class TPCCBenchmark implements Callback{
 				
 				//long lStartTime = System.nanoTime();
 				boolean all = false;
-				int a = gen.nextInt(2);				
+				int a = gen.nextInt(5);				
 				
 				if(all||a==0)eQ1(transaction);
 				if(all||a==1)eQ2(transaction);
 				
+				//-----------------------------
 				
-				//if(all||a==2)eQ4(transaction);
+				if(all||a==2)eQ4(transaction);
 				
-				//if(all||a==3)eQ5(transaction);
+				if(all||a==3)eQ5(transaction);
 			
-				//	if(all||a==4)eQ3(transaction);
+				if(all||a==4)eQ3(transaction);
 				
 				transaction.commit();
 				transaction.setState(Transaction.COMMITTED);
