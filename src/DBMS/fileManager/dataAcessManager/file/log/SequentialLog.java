@@ -3,13 +3,18 @@ package DBMS.fileManager.dataAcessManager.file.log;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.io.SyncFailedException;
 
+import DBMS.Kernel;
 import DBMS.fileManager.dataAcessManager.file.DataConvert;
+import DBMS.recoveryManager.RedoLog;
 
 public class SequentialLog implements LogHandle {
 	
 	
 	public RandomAccessFile randomAccessFile;
+	
+
 	
 	public SequentialLog(String file) {
 		try {
@@ -17,11 +22,13 @@ public class SequentialLog implements LogHandle {
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
+	
 	}
 	
+
 	@Override
 	public synchronized void append(int lsn, int trasaction, char operation, String tupleID, String obj){
-
+		
 		try {
 			String record =  lsn + LOG_SEPARATOR
 						   + trasaction  + LOG_SEPARATOR
@@ -35,6 +42,7 @@ public class SequentialLog implements LogHandle {
 			randomAccessFile.write(size);
 			randomAccessFile.write(data);
 			randomAccessFile.write(size);
+			//randomAccessFile.getFD().sync();
 			
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -42,11 +50,8 @@ public class SequentialLog implements LogHandle {
 	}
 	
 
-
-
-
 	
-	public Long getPointer(){
+	public synchronized Long getPointer(){
 		try {
 			return new Long(randomAccessFile.length());
 		} catch (IOException e) {
@@ -182,7 +187,7 @@ public class SequentialLog implements LogHandle {
 	
 
 	
-	private byte[] readFile(long pointer, byte[]block) throws IOException{
+	private synchronized  byte[] readFile(long pointer, byte[]block) throws IOException{
 			if(pointer<0)return null;
 			randomAccessFile.seek(pointer);
 			int i = randomAccessFile.read(block);
@@ -233,6 +238,70 @@ public class SequentialLog implements LogHandle {
 		System.out.println("finish");
 	}
 	*/
+
+
+	@Override
+	public void flush() {
+		try {
+			randomAccessFile.getFD().sync();
+		} catch (SyncFailedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+
+	@Override
+	public void close() {
+		try {
+			randomAccessFile.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+
+	@Override
+	public String getDataTuple(String tupleId) throws IOException {
+		final String[] array = new String[1];
+		
+		interator(new LogInterator() {
+			
+			@Override
+			public char readRecord(int lsn, int trasaction, char operation, String obj, long filePointer) {
+		
+				
+				if (obj == null)
+					return LogInterator.STOP;
+				
+				String tuple = obj.split(RedoLog.TUPLE_ID_SEPARATOR)[0];
+				
+				if(tuple.equals(tupleId)) {
+					array[0] = obj.split(RedoLog.TUPLE_ID_SEPARATOR)[1];
+					//System.out.println("Recuperou: ");
+					return STOP;
+									
+				}else {
+					Kernel.getRecoveryManager().recoveryRecord(false, operation, obj);
+				}
+				
+				
+				return PREV;
+			}
+			
+			@Override
+			public void error(Exception e) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+
+		return array[0]; 
+	}
 	
 //	public static void main(String[] args) throws IOException {
 //		SequentialLog s = new SequentialLog("database\\log.b");

@@ -1,6 +1,7 @@
 package DBMS.fileManager.dataAcessManager.file.log;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 import org.apache.jdbm.DB;
@@ -79,4 +80,27 @@ public class LinkedListLog implements LogHandle{
 		
 	}
 
+	@Override
+	public void flush() {
+		db.commit();
+		
+		
+	}
+
+
+	@Override
+	public void close() {
+		db.close();
+		
+		
+		
+	}
+
+	@Override
+	public String getDataTuple(String tupleId) throws IOException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	
 }

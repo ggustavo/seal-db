@@ -7,9 +7,11 @@ import java.util.Scanner;
 
 import DBMS.Kernel;
 import DBMS.queryProcessing.MTable;
+import DBMS.queryProcessing.Tuple;
 import DBMS.queryProcessing.parse.Parse;
 import DBMS.queryProcessing.queryEngine.AcquireLockException;
 import DBMS.queryProcessing.queryEngine.Plan;
+import DBMS.queryProcessing.queryEngine.InteratorsAlgorithms.TableScan;
 import DBMS.transactionManager.Transaction;
 
 
@@ -37,7 +39,7 @@ public class TPCCLoad {
 			
 				try {
 					
-					
+//					
 				loadTable(transaction, Kernel.getCatalog().getSchemabyName("tpcc").getTableByName("customer"), tpchSourceFile);
 				loadTable(transaction, Kernel.getCatalog().getSchemabyName("tpcc").getTableByName("district"), tpchSourceFile);
 				loadTable(transaction, Kernel.getCatalog().getSchemabyName("tpcc").getTableByName("history"), tpchSourceFile);
@@ -48,6 +50,8 @@ public class TPCCLoad {
 				loadTable(transaction, Kernel.getCatalog().getSchemabyName("tpcc").getTableByName("stock"), tpchSourceFile);
 				loadTable(transaction, Kernel.getCatalog().getSchemabyName("tpcc").getTableByName("warehouse"), tpchSourceFile);
 
+				
+				
 				total+=showDetails(transaction, Kernel.getCatalog().getSchemabyName("tpcc").getTableByName("customer"));
 				total+=showDetails(transaction, Kernel.getCatalog().getSchemabyName("tpcc").getTableByName("district"));
 				total+=showDetails(transaction, Kernel.getCatalog().getSchemabyName("tpcc").getTableByName("history"));	
@@ -63,7 +67,7 @@ public class TPCCLoad {
 				System.out.println("\nTotal Number of Tuples: " + total);
 				
 					
-				} catch (FileNotFoundException | InterruptedException | AcquireLockException e) {
+				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
@@ -124,13 +128,28 @@ public class TPCCLoad {
 		
 	}
 	
-
+	
 	private static int showDetails(Transaction transaction, MTable table)  throws FileNotFoundException, InterruptedException {
 		if(transaction==null)return 0;
 		long lStartTime = System.nanoTime();
 		System.out.println("--------------------------------------------------------");
 		System.out.println("Table: " + table.getName());
-		System.out.println("Tuples: " + table.getNumberOfTuples(transaction));
+		
+		int count = 0;
+		
+		TableScan scan = new TableScan(transaction, table);
+		Tuple t = null;
+		try {
+			while((t = scan.nextTuple())!=null){
+				//if(count==0)System.out.println(t.getTupleID());
+				count++;
+			}
+		} catch (AcquireLockException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		System.out.println("Tuples: " + table.getNumberOfTuples(transaction) + "(current)/" + table.getTuplesHash().size()+"(real)  TableScan: " + count );
 		long lEndTime = System.nanoTime();
 		long output = lEndTime - lStartTime;
 	    System.out.println("Table Scan (Elapsed time): " + output / 1000000 + " ms");

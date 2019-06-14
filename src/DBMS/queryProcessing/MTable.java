@@ -30,6 +30,7 @@ public class MTable{
 	private String name;
 	
 	private int lastTupleWrited;
+	private int numberOfTuples = 0;
 	
 	private Column[] columns;
 	
@@ -114,32 +115,30 @@ public class MTable{
 		return table;
 	}
 	
-	public Column[] getColumns() {
-		return columns;
-	}
+	
+	public Tuple recoveryTuple(String tupleId) {
+		
+		Tuple tuple = tuples.get(tupleId); 
+		if(isTemp())return tuple;
+		
+		if(tuple==null) {
+			
+			if(Kernel.IN_RECOVERY_PROCESS) {
+				tuple = Kernel.getRecoveryManager().getRecord(this, tupleId);
+			}else {
+				return null;
+			}
+		}else if(Kernel.IN_RECOVERY_PROCESS && !tuple.isRecovered) {
+			tuple = Kernel.getRecoveryManager().getRecord(this, tupleId);
+		}
 
-	public String[] getColumnNames() {
-		String [] array = new String[columns.length];
-		for (int i = 0; i < columns.length; i++) {
-			array[i] = columns[i].getName();
-		}
-		return array;
+		return tuple;
 	}
-	
-	public int getIdColumn(String columnName) {
-		for (int i = 0; i < columns.length; i++) {
-			if(columns[i].getName().equals(columnName)){
-				return i;
-			};
-		}
-		return -1;
-	}
-	
 	
 	public Tuple getTuple(Transaction transaction, String tupleId) throws AcquireLockException{
 		
-		Tuple tuple = tuples.get(tupleId); 
-		if(tuple==null)return null;
+		Tuple tuple = recoveryTuple(tupleId);
+		if(tuple == null)return null;
 		
 		if(!transaction.lock(tuple, Lock.WRITE_LOCK))return null;
 		
@@ -153,7 +152,7 @@ public class MTable{
 	
 	public boolean deleteTuple(Transaction transaction, String tupleId) throws AcquireLockException{
 		
-		Tuple tuple = tuples.get(tupleId); 
+		Tuple tuple = recoveryTuple(tupleId);
 		if(tuple==null)return false;
 		
 		
@@ -161,6 +160,9 @@ public class MTable{
 		
 		Kernel.getMemoryAcessManager().request(Lock.WRITE_LOCK, tuple);
 		tuples.remove(tupleId);
+		
+		numberOfTuples--;
+		Kernel.getInitializer().saveTableSizeMetaData(transaction, this);
 		
 		transaction.unlock(Lock.WRITE_LOCK, DELETE,tuple,null,temp);
 		tuple.setData(null);
@@ -170,7 +172,7 @@ public class MTable{
 	
 	public boolean updateTuple(Transaction transaction,String data[], String tupleId) throws AcquireLockException{
 		
-		Tuple tuple = tuples.get(tupleId); 
+		Tuple tuple = recoveryTuple(tupleId);
 		if(tuple==null)return false;
 		
 		if(!transaction.lock(tuple, Lock.WRITE_LOCK))return false;
@@ -194,17 +196,44 @@ public class MTable{
 		setLastTupleWrited(getLastTupleWrited()+1);
 		int id = getLastTupleWrited();
 		Tuple tuple = new Tuple(this, String.valueOf(id), lineToArray(tupleData));
-		
+		tuple.isRecovered = true;
 
 		if(!transaction.lock(tuple, Lock.WRITE_LOCK))return false;
 				
 		tuples.put(tuple.getTupleID(), tuple);
+		
+		numberOfTuples++;
+		Kernel.getInitializer().saveTableSizeMetaData(transaction, this);
+		
 		Kernel.getMemoryAcessManager().request(Lock.WRITE_LOCK, tuple);
 		
 		transaction.unlock(Lock.WRITE_LOCK, INSERT,tuple,null,temp);
 		
 		return true;
 	}
+	
+	
+	public Column[] getColumns() {
+		return columns;
+	}
+
+	public String[] getColumnNames() {
+		String [] array = new String[columns.length];
+		for (int i = 0; i < columns.length; i++) {
+			array[i] = columns[i].getName();
+		}
+		return array;
+	}
+	
+	public int getIdColumn(String columnName) {
+		for (int i = 0; i < columns.length; i++) {
+			if(columns[i].getName().equals(columnName)){
+				return i;
+			};
+		}
+		return -1;
+	}
+	
 	
 
 	public static String[] lineToArray(String t){
@@ -222,12 +251,16 @@ public class MTable{
 		syc();
 	}
 
+
+	
 	
 	public int getNumberOfTuples(Transaction transaction) {
-		
-		return tuples.size();
+		return numberOfTuples;
 	}
 
+	public void setNumberOfTuples(int value) {
+		numberOfTuples = value;
+	}
 
 	public static String arrayToString(String data[]) {
 		String s = "";

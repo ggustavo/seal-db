@@ -24,7 +24,16 @@ public class Transaction {
 	
 	private boolean recoverable = true;
 	private boolean schedulable = true;
+	private boolean noThread = false;
 	
+	public boolean isNoThread() {
+		return noThread;
+	}
+
+	public void setNoThread(boolean noThread) {
+		this.noThread = noThread;
+	}
+
 	private LinkedList<TransactionOperation> operations;
 	//private List<Lock> lockList;
 	private List<MTable> temps;
@@ -82,9 +91,6 @@ public class Transaction {
 		}else if(obj.transactionId == getIdT()){
 			return true;
 		}
-		
-		
-		
 		throw new AcquireLockException();
 	}
 	
@@ -119,7 +125,9 @@ public class Transaction {
 
 	
 	public boolean execRunnable(TransactionRunnable tr){
+			
 		if(!canExec())return false;
+	
 		if(threadRunnable == null || !schedulable){
 			
 			threadRunnable = new Runnable() {
@@ -145,7 +153,14 @@ public class Transaction {
 				}
 			};
 			
-			Kernel.TRANSACTIONS_EXECUTOR.execute(threadRunnable);
+			//new Thread(threadRunnable).start();
+//			
+			if(noThread) {
+				threadRunnable.run();
+			}else {
+				Kernel.TRANSACTIONS_EXECUTOR.execute(threadRunnable);				
+			}
+			
 			
 			//new Thread(threadRunnable).start();
 			
@@ -158,7 +173,7 @@ public class Transaction {
 	}
 	
 	public void failed(){
-		TRANSACTION_COUNT++;
+		//TRANSACTION_COUNT++;
 		if(!schedulable)return;
 		if(!canExec())return;
 		setState(FAILED);
@@ -180,7 +195,7 @@ public class Transaction {
 	}
 	
 	public void abort(){
-		TRANSACTION_COUNT++;
+		//TRANSACTION_COUNT++;
 		if(!schedulable)return;
 		if(!canExec())return;
 		setState(ABORTED);
@@ -241,7 +256,7 @@ public class Transaction {
 		if(state == ACTIVE || state == PREPARED){
 			return true;
 		}else{
-			Kernel.log(this.getClass(),"Transaction Finish, state: " + getState(state),Level.WARNING);
+			Kernel.log(this.getClass(),"Transaction "+idT+" Finish, state: " + getState(state),Level.WARNING);
 			return false;
 		}
 	}

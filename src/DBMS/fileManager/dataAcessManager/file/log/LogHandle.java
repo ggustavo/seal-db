@@ -1,5 +1,7 @@
 package DBMS.fileManager.dataAcessManager.file.log;
 
+import java.io.IOException;
+
 public interface LogHandle {
 
 	public final static String LOG_SEPARATOR = "ϕ";
@@ -11,5 +13,11 @@ public interface LogHandle {
 	void interator(LogInterator interator);
 
 	void interator(LogInterator interator, boolean end);
+	
+	void flush();
+	
+	void close();
+	
+	String getDataTuple(String tupleId) throws IOException;
 
 }

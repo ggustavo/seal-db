@@ -13,7 +13,7 @@ import DBMS.recoveryManager.RedoLog;
 
 
 
-public class HybridTreeLog implements LogHandle{
+public class ParallelTreeLog implements LogHandle{
 
 	private long LAST_LSN = -1;
 	private long LAST_LSN_POINTER = -1;
@@ -34,7 +34,7 @@ public class HybridTreeLog implements LogHandle{
 	
 	private SequentialLog sequentialLog;
 	
-	public HybridTreeLog(String file) {
+	public ParallelTreeLog(String file) {
 		sequentialLog = new SequentialLog(file);
 		
 
@@ -75,30 +75,30 @@ public class HybridTreeLog implements LogHandle{
 
 	
 	public void startSyncThread() {
-//		Kernel.log(ParallelTreeLog.class, "Synchronized Tree Thread Started", Level.CONFIG);
-//		new Thread(new Runnable() {
-//			
-//
-//			@Override
-//			public void run() {
-//
-//				try {
-//					while (Kernel.ENABLE_RECOVERY) {
-//						
-//						
-//						Thread.sleep(30000);
-//						syncSequentialToIndexed();
-//						db.commit();							
-//						
-//
-//					}
-//				} catch (InterruptedException e) {
-//					// TODO Auto-generated catch block
-//					e.printStackTrace();
-//				}
-//
-//			}
-//		}).start();
+		Kernel.log(ParallelTreeLog.class, "Synchronized Tree Thread Started", Level.CONFIG);
+		new Thread(new Runnable() {
+			
+
+			@Override
+			public void run() {
+
+				try {
+					while (Kernel.ENABLE_RECOVERY) {
+						
+						
+						Thread.sleep(30000);
+						syncSequentialToIndexed();
+						db.commit();							
+						
+
+					}
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
+			}
+		}).start();
 	}
 	
 	public synchronized String getDataTuple(String tupleId) throws IOException {
@@ -126,10 +126,8 @@ public class HybridTreeLog implements LogHandle{
 		sequentialLog.append(lsn, trasaction, operation, tupleID, obj);
 		LAST_LSN_LOG_CURRENT = lsn;
 		
-		flush();
-		sequentialLog.flush();
-		//meta.put(233, (long) 43423);
-		//db.commit();
+	//	flush();
+		//sequentialLog.flush();
 		
 	}
 	

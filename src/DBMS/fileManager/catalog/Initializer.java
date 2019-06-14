@@ -1,5 +1,11 @@
 package DBMS.fileManager.catalog;
 
+import java.io.File;
+import java.util.SortedMap;
+
+import org.apache.jdbm.DB;
+import org.apache.jdbm.DBMaker;
+
 import DBMS.Kernel;
 import DBMS.fileManager.Column;
 import DBMS.fileManager.Schema;
@@ -57,8 +63,45 @@ public class Initializer {
 			initializerListen.afterStartSystemCatalog(systemTransaction);
 		}
 		
+		
+		db = DBMaker.openFile(Kernel.DATABASE_FILES_FOLDER+ File.separator + "tables_meta")
+				.disableTransactions()
+				.closeOnExit()
+				.useRandomAccessFile()
+				.make();
+		
+		tablesMeta = db.getTreeMap("meta");
+		if(tablesMeta == null)tablesMeta = db.createTreeMap("meta");
+		
+		
+		
 	}
-
+	private DB db;
+	private SortedMap<String, Integer> tablesMeta;
+	
+	public synchronized void saveTableSizeMetaData(Transaction transaction, MTable table){
+		if(Kernel.ENABLE_RECOVERY && !table.isSystemTable()&&!table.isTemp()) {
+			tablesMeta.put(table.getSchemaManipulate().getId()+"-"+table.getTableID(), table.getNumberOfTuples(transaction));
+			db.commit();
+		}
+	}
+	
+	
+	public void loadTableSize() {
+		for (Schema schema : Kernel.getCatalog().getShemas()) {
+			for (MTable table : schema.getTables()) {
+				if(table.isSystemTable() || table.isTemp())continue;
+				Integer value = tablesMeta.get(schema.getId()+"-"+table.getTableID());
+				//System.out.println(table.getName() + " size: " + value);
+				if(value!=null) {
+					table.setLastTupleWrited(value);
+					table.setNumberOfTuples(value);
+				}
+			}
+		}
+	}
+	
+	
 	public Schema createSchema(String schema, Transaction transaction) {
 		int id = -1;
 		for (Schema s : Kernel.getCatalog().getShemas()) {

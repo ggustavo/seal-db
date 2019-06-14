@@ -35,8 +35,10 @@ public abstract class Kernel {
 	public static int MEMORY_SIZE_TUPLES = 50;
 	
 	
+	public static boolean IN_RECOVERY_PROCESS = false;
 	
 	public static boolean ENABLE_RECOVERY = true;
+	public static boolean ENABLE_FAST_RECOVERY_STRATEGIE = false;
 	public static boolean ENABLE_HOT_COLD_DATA_ALGORITHMS = true;
 	public static boolean ENABLE_LOG_REQUESTS = true;
 	
@@ -75,9 +77,14 @@ public abstract class Kernel {
 	
 
 	public static void start() {
-		TRANSACTIONS_EXECUTOR = Executors.newFixedThreadPool(TRANSACTION_NUMBER_OF_WORKERS);
-		
 		Kernel.log(Kernel.class, "SEAL-DB Initializing", Level.CONFIG);
+
+		TRANSACTIONS_EXECUTOR = Executors.newFixedThreadPool(TRANSACTION_NUMBER_OF_WORKERS);
+		addJoinAlgotithm(BlockNestedLoopJoin.class);
+		addJoinAlgotithm(MergeJoin.class);
+		addJoinAlgotithm(HashJoin.class);
+		
+		
 		Kernel.log(Kernel.class, "Number of Transactions Works: " + TRANSACTION_NUMBER_OF_WORKERS, Level.CONFIG);
 		
 		DATABASE_FILES_FOLDER = createDirectory("database");
@@ -86,6 +93,9 @@ public abstract class Kernel {
 		getInitializer().inicializeCatalog();
 		
 		createFile(DATABASE_FILES_FOLDER + File.separator + LOG_FILE_NAME);
+		
+		if(ENABLE_RECOVERY)Kernel.getInitializer().loadTableSize();
+		
 		recoveryManager.start(DATABASE_FILES_FOLDER + File.separator + LOG_FILE_NAME);
 
 		if(ENABLE_HOT_COLD_DATA_ALGORITHMS) {
@@ -93,9 +103,7 @@ public abstract class Kernel {
 			Kernel.log(Kernel.class, "Using " + memoryAcessManager.getAlgorithm().getName() + " Algorithm. Capacity: " + memoryAcessManager.getAlgorithm().getCapacity(), Level.CONFIG);
 		}
 		
-		addJoinAlgotithm(BlockNestedLoopJoin.class);
-		addJoinAlgotithm(MergeJoin.class);
-		addJoinAlgotithm(HashJoin.class);
+	
 
 	}
 

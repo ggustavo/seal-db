@@ -1,6 +1,7 @@
 package DBMS.fileManager.dataAcessManager.file.log;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.SortedMap;
 
@@ -8,6 +9,7 @@ import org.apache.jdbm.DB;
 import org.apache.jdbm.DBMaker;
 
 import DBMS.Kernel;
+import DBMS.recoveryManager.RedoLog;
 
 
 
@@ -47,7 +49,7 @@ public class FullTreeLog implements LogHandle{
 	}
 	
 	public synchronized void append(int lsn, int trasaction, char operation, String tupleID, String obj) {
-		
+	
 		if(tupleID == null) return;
 		String record =  lsn + LOG_SEPARATOR
 				   + trasaction  + LOG_SEPARATOR
@@ -96,5 +98,44 @@ public class FullTreeLog implements LogHandle{
 		}
 		
 	}
+	
+	
+	public synchronized String getDataTuple(String tupleId) throws IOException {
+		
+		
+		LinkedList<String> l = map.get(tupleId);
+		
+		String record = l.getLast();
+
+		String values[] = record.split(LOG_SEPARATOR);
+//		int lsn = Integer.parseInt(values[0]);
+//		int trasaction = Integer.parseInt(values[1]);
+//		char operation = values[2].charAt(0);
+//		long filePointer = -1;
+		
+		String obj = values[3];
+		
+		String stringTuple = obj.split(RedoLog.TUPLE_ID_SEPARATOR)[1];
+		
+		return stringTuple; 
+	}
+	
+	
+	@Override
+	public void flush() {
+		db.commit();
+		
+		
+	}
+
+
+	@Override
+	public void close() {
+		db.close();
+		
+		
+		
+	}
+	
 
 }

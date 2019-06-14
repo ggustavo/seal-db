@@ -38,6 +38,13 @@ public class ExecuteTransactions {
 	}
 	
 	
+	public Transaction execute(TransactionRunnable tr,boolean recoverable,boolean schedulable, boolean noThread){
+		Transaction t = Transaction.getNewInstance(recoverable,schedulable);
+		t.setNoThread(noThread);
+		t.execRunnable(tr);
+		return t;
+	}
+	
 	public AllTransactionErrorsListener getAllTransactionErrorsListener() {
 		return allTransactionErrorsListener;
 	}

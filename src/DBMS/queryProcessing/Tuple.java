@@ -14,6 +14,9 @@ public class Tuple implements Serializable{
 	private MTable table;
 	private String tupleID;
 	private Node<Tuple> node;
+	public boolean isRecovered = false;
+	
+	
 	private char operation = Lock.READ_LOCK;
 	
 	public boolean isUsed = false;
@@ -30,7 +33,7 @@ public class Tuple implements Serializable{
 		return data;
 	}
 	
-	public void setData(String[] data) {
+	public synchronized void setData(String[] data) {
 
 			this.data = data;			
 		

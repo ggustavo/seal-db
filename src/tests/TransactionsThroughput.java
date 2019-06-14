@@ -16,6 +16,7 @@ import DBMS.transactionManager.Transaction;
 public class TransactionsThroughput {
 	
 	static int x = 0;
+	static int sum = 0;
 
 	public static void start() {
 		
@@ -42,6 +43,8 @@ public class TransactionsThroughput {
 		
 		final Thread t = new Thread(new Runnable() {
 			
+			
+			
 			@Override
 			public void run() {
 				
@@ -49,9 +52,10 @@ public class TransactionsThroughput {
 					int value = 0;
 					try {
 						value = Transaction.TRANSACTION_COUNT;
-						Transaction.TRANSACTION_COUNT = 0;
-						series.add((x++), value);
+						
+						series.add((x++), value-sum);
 						window.repaint();
+						sum = value;
 					}catch (Exception e) {
 						
 					}

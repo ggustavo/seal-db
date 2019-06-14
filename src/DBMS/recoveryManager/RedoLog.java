@@ -1,14 +1,19 @@
 package DBMS.recoveryManager;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.LinkedList;
 import java.util.logging.Level;
 
 import DBMS.Kernel;
 import DBMS.fileManager.Schema;
-import DBMS.fileManager.dataAcessManager.file.log.SequentialLog;
 import DBMS.fileManager.dataAcessManager.file.log.FullTreeLog;
+import DBMS.fileManager.dataAcessManager.file.log.ParallelTreeLog;
 import DBMS.fileManager.dataAcessManager.file.log.HybridTreeLog;
 import DBMS.fileManager.dataAcessManager.file.log.LogHandle;
 import DBMS.fileManager.dataAcessManager.file.log.LogInterator;
-import DBMS.fileManager.dataAcessManager.file.log.ParallelHybridTreeLog;
+import DBMS.fileManager.dataAcessManager.file.log.SequentialLog;
 import DBMS.queryProcessing.MTable;
 import DBMS.queryProcessing.Tuple;
 import DBMS.transactionManager.Transaction;
@@ -22,10 +27,7 @@ public class RedoLog implements IRecoveryManager {
 	private boolean debug = false;
 	
 	
-	
-	public void start(String file) {
-		
-		
+	public synchronized void startHandle(String file) {
 		if(Kernel.LOG_STRATEGY == Kernel.SEQUENTIAL_lOG) {
 			logHandle = new SequentialLog(file);
 		}
@@ -35,47 +37,80 @@ public class RedoLog implements IRecoveryManager {
 		if(Kernel.LOG_STRATEGY == Kernel.HYBRID_TREE_lOG) {
 			logHandle = new HybridTreeLog(file);
 		}
+		
 		if(Kernel.LOG_STRATEGY == Kernel.PARALLEL_HYBRID_TREE_lOG) {
-			logHandle = new ParallelHybridTreeLog(file);
+			logHandle = new ParallelTreeLog(file);
 		}
-		
-		
 		CURRENT_LSN = logHandle.readLastLSN();
+	}
+	
+	
+
+
+	public void start(String file) {
+		if(!Kernel.ENABLE_RECOVERY)return;
+		
+		startHandle(file);
 		
 		if (Kernel.getFinalizeStateDatabase().equals(Kernel.DATABASE_FINALIZE_STATE_ERROR)) {
 			if(Kernel.ENABLE_RECOVERY){
 				Kernel.log(Kernel.class, "Use " + logHandle.getClass().getSimpleName() + " Strategy", Level.CONFIG);
-				Kernel.log(this.getClass(),"Start recovery process...",Level.WARNING);
-				long lStartTime = System.nanoTime();
-				recovery();		
-				Kernel.log(this.getClass(),"Finish recovery process... total time: " + (System.nanoTime() - lStartTime) / 1000000 + " ms",Level.WARNING);
+			
+				if(logHandle instanceof ParallelTreeLog) {
+					((ParallelTreeLog) logHandle).startSyncTree();
+				}
+				
+				
+				if(Kernel.ENABLE_FAST_RECOVERY_STRATEGIE) {
+					new Thread(new Runnable() {
+						
+						@Override
+						public void run() {
+							recovery();
+							if(logHandle instanceof ParallelTreeLog) {
+								((ParallelTreeLog) logHandle).startSyncThread();
+							}
+							
+						}
+					}).start();
+				}else {
+					recovery();
+					if(logHandle instanceof ParallelTreeLog) {
+						((ParallelTreeLog) logHandle).startSyncThread();
+					}
+				}
+		
 			}
 		} else {
 			Kernel.log(this.getClass(),"Normal startup without recovery...",Level.WARNING);
 		}
 
 		Kernel.setFinalizeStateDatabase(Kernel.DATABASE_FINALIZE_STATE_ERROR);
-		//if(Kernel.ENABLE_RECOVERY)addCheckPoint();
 		
 	}
 
 	public void safeFinalize() {
-		Kernel.getScheduler().abortAll();
+		if(Kernel.getScheduler()!=null)Kernel.getScheduler().abortAll();
 		//if(Kernel.ENABLE_RECOVERY)addCheckPoint();
-		Kernel.setFinalizeStateDatabase(Kernel.DATABASE_FINALIZE_STATE_OK);
+		//Kernel.setFinalizeStateDatabase(Kernel.DATABASE_FINALIZE_STATE_OK);
+		logHandle.close();
 	}
 	
-	
+
 	
 	private int cDelete = 0;
 	private int cInserts= 0;
 	private int cUpdates = 0;
 	public void recovery() {
-		
+		Kernel.log(this.getClass(),"Start recovery process...",Level.WARNING);
+		long lStartTime = System.nanoTime();
+			
+		Kernel.IN_RECOVERY_PROCESS = true;
 		logHandle.interator(new LogInterator() {
 			
 			@Override
 			public char readRecord(int lsn, int trasaction, char operation, String obj, long filePointer) {
+				
 				
 				if(debug) {
 					System.out.println("---------------------------------------");
@@ -85,59 +120,9 @@ public class RedoLog implements IRecoveryManager {
 					System.out.println("log file pointer: "+filePointer);
 					System.out.println("object: " +obj);					
 				}
+				//if(lsn >= CURRENT_LSN)return LogInterator.STOP;
 				
-
-				if (operation == MTable.DELETE) {
-					cDelete++;
-					String id = obj.split(TUPLE_ID_SEPARATOR)[0];
-				//	String stringTuple = obj.split(TUPLE_ID_SEPARATOR)[1];
-					
-					String schemaID = id.split("-")[0];
-					String tableID = id.split("-")[1];
-					String tupleID = id.split("-")[2];
-						
-					Schema schema = Kernel.getCatalog().getSchemabyId(schemaID);
-					MTable table = schema.getTableById(tableID);
-			
-					table.getTuplesHash().remove(tupleID);
-					
-				} 
-				
-				if (operation == MTable.UPDATE) {
-					cUpdates++;
-					String id = obj.split(TUPLE_ID_SEPARATOR)[0];
-					String stringTuple = obj.split(TUPLE_ID_SEPARATOR)[1];
-					
-					String schemaID = id.split("-")[0];
-					String tableID = id.split("-")[1];
-					String tupleID = id.split("-")[2];
-					
-					Schema schema = Kernel.getCatalog().getSchemabyId(schemaID);
-					MTable table = schema.getTableById(tableID);
-			
-					Tuple t = table.getTuplesHash().get(tupleID);
-					t.setData(stringTuple.split("\\"+MTable.SEPARATOR));
-
-					
-				}
-				
-				if (operation == MTable.INSERT) {
-					cInserts++;
-					String id = obj.split(TUPLE_ID_SEPARATOR)[0];
-					String stringTuple = obj.split(TUPLE_ID_SEPARATOR)[1];
-					
-					String schemaID = id.split("-")[0];
-					String tableID = id.split("-")[1];
-					String tupleID = id.split("-")[2];
-						
-					Schema schema = Kernel.getCatalog().getSchemabyId(schemaID);
-					MTable table = schema.getTableById(tableID);
-					
-					Tuple tuple = new Tuple(table, tupleID, stringTuple.split("\\"+MTable.SEPARATOR));
-					table.getTuplesHash().put(tupleID, tuple);
-					table.setLastTupleWrited(Integer.parseInt(tupleID));
-						
-				}
+				recoveryRecord(true,operation, obj);
 
 				if(operation == TransactionOperation.BEGIN_TRANSACTION) {
 
@@ -157,11 +142,18 @@ public class RedoLog implements IRecoveryManager {
 			}
 		},false);
 		
+	
+		RedoLog.EVENTS.add("R," + "-1" + "," + lStartTime + "," + System.nanoTime() );
+		
+		Kernel.log(this.getClass(),"Finish recovery process... total time: " + (System.nanoTime() - lStartTime) / 1000000 + " ms",Level.WARNING);
+
 		//Kernel.log(this.getClass(),"Redo " + cTransactions + " Transactions",Level.WARNING);
 		Kernel.log(this.getClass(),"Redo " + cInserts + " Inserts Records",Level.WARNING);
 		Kernel.log(this.getClass(),"Redo " + cUpdates + " Updates Records",Level.WARNING);
 		Kernel.log(this.getClass(),"Redo " + cDelete + " Deletes Records",Level.WARNING);
-		
+		Kernel.IN_RECOVERY_PROCESS = false;
+
+	
 	}
 	
 	public void undoTransaction(Transaction transaction) {
@@ -256,6 +248,8 @@ public class RedoLog implements IRecoveryManager {
 			}
 			
 		}
+
+
 		Kernel.log(this.getClass(),"Finish Commit Transaction: " + transaction.getIdT() + " operations: " + transaction.getOperations().size() + " Writes: " + writes,Level.WARNING);
 		
 	}
@@ -318,4 +312,150 @@ public class RedoLog implements IRecoveryManager {
 		}
 	
 	}
+
+	@Override
+	public synchronized Tuple getRecord(MTable table, String tupleId) {
+		
+		try {
+			String gId = table.getSchemaManipulate().getId() + "-" + table.getTableID() + "-" + tupleId;
+			
+			String tupleData = logHandle.getDataTuple(gId);
+			
+			
+			//System.out.println("Recovery: " + tupleData);
+			
+			Tuple tuple = new Tuple(table, tupleId,  tupleData.split("\\"+MTable.SEPARATOR));
+			tuple.isRecovered = true;
+			table.getTuplesHash().put(tupleId, tuple);
+			
+			
+			return tuple;
+			
+			
+		} catch (Exception e) {
+			//e.printStackTrace();
+			//Kernel.exception(this.getClass(), e);
+			return null;
+		}
+		
+		
+		//Tuple tuple = new Tuple(this, String.valueOf(id), lineToArray(tupleData));
+		
+		//		String stringTuple;
+//		
+//		String schemaID = id.split("-")[0];
+//		String tableID = id.split("-")[1];
+//		String tupleID = id.split("-")[2];
+//	
+//		Schema schema = Kernel.getCatalog().getSchemabyId(schemaID);
+//		MTable table = schema.getTableById(tableID);
+//		
+		//Tuple tuple = new Tuple(table, tupleID, stringTuple.split("\\"+MTable.SEPARATOR));
+//		table.getTuplesHash().put(tupleID, tuple);
+//		table.setLastTupleWrited(Integer.parseInt(tupleID));
+//		
+	}
+	
+
+	public synchronized void recoveryRecord(boolean statics, char operation, String obj) {
+		if (operation == MTable.DELETE) {
+			if(statics)cDelete++;
+			String id = obj.split(TUPLE_ID_SEPARATOR)[0];
+		//	String stringTuple = obj.split(TUPLE_ID_SEPARATOR)[1];
+			
+			String schemaID = id.split("-")[0];
+			String tableID = id.split("-")[1];
+			String tupleID = id.split("-")[2];
+				
+			Schema schema = Kernel.getCatalog().getSchemabyId(schemaID);
+			MTable table = schema.getTableById(tableID);
+
+			table.getTuplesHash().remove(tupleID);
+			
+		} 
+		
+		if (operation == MTable.UPDATE) {
+			if(statics)cUpdates++;
+			String id = obj.split(TUPLE_ID_SEPARATOR)[0];
+			String stringTuple = obj.split(TUPLE_ID_SEPARATOR)[1];
+			
+			String schemaID = id.split("-")[0];
+			String tableID = id.split("-")[1];
+			String tupleID = id.split("-")[2];
+			
+			Schema schema = Kernel.getCatalog().getSchemabyId(schemaID);
+			MTable table = schema.getTableById(tableID);
+
+			Tuple t = table.getTuplesHash().get(tupleID);
+			if(t==null) {
+				t= new Tuple(table, tupleID, stringTuple.split("\\"+MTable.SEPARATOR));
+				t.isRecovered = true;
+				table.getTuplesHash().put(tupleID, t);
+			}else {
+				t.setData(stringTuple.split("\\"+MTable.SEPARATOR));
+				t.isRecovered = true;
+			}
+
+			
+		}
+		
+		if (operation == MTable.INSERT) {
+			if(statics)cInserts++;
+			String id = obj.split(TUPLE_ID_SEPARATOR)[0];
+			String stringTuple = obj.split(TUPLE_ID_SEPARATOR)[1];
+			
+			String schemaID = id.split("-")[0];
+			String tableID = id.split("-")[1];
+			String tupleID = id.split("-")[2];
+				
+			Schema schema = Kernel.getCatalog().getSchemabyId(schemaID);
+			MTable table = schema.getTableById(tableID);
+
+			Tuple tuple = new Tuple(table, 	tupleID, stringTuple.split("\\"+MTable.SEPARATOR));
+			tuple.isRecovered = true;
+			table.getTuplesHash().put(tupleID, tuple);
+				
+		}
+	}
+	
+	
+	public void forceFlush() {
+		logHandle.flush();
+	}
+	
+	public void forceClose() {
+		logHandle.close();
+	}
+	
+	
+	public static LinkedList<String > EVENTS = new LinkedList<String>();
+
+	
+	public static void saveLogEvents() {
+//		SimpleDateFormat dt = new SimpleDateFormat("yyyy-MM-dd hh-mm");
+//		String date = dt.format(new Date());
+		
+		try {
+			String instat = Kernel.ENABLE_FAST_RECOVERY_STRATEGIE ? "instant" : "no_instant";
+			String name = Kernel.getRecoveryManager().getLogHandle().getClass().getSimpleName()+"_"+instat+".csv";
+			PrintWriter logRequests = new PrintWriter(new FileWriter(new File(name) ,  true));
+	
+			for (String string : EVENTS) {
+				logRequests.println(string);				
+			}
+				
+			logRequests.flush();
+			logRequests.close();
+		} catch (IOException e) {
+			
+			e.printStackTrace();
+		}
+		
+	}
+	
+	public LogHandle getLogHandle() {
+		return logHandle;
+	}
+
+	
 }
