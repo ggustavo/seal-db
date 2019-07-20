@@ -63,9 +63,8 @@ public class LRU extends Memory{
 	
 	
 	public void replacement(){
-
-		list.add(list.remove(list.getHead()));
-	
+		
+		coldList.add(list.remove(list.getHead()));
 	}
 	
 	
@@ -115,7 +114,7 @@ public class LRU extends Memory{
 				node = node.getNext();
 			}
 			
-			
+			logRequests.flush();
 			logRequests.close();
 		} catch (IOException e) {
 			

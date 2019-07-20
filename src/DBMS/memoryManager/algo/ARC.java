@@ -162,10 +162,7 @@ public class ARC extends Memory{
 	@Override
 	public List<Tuple> getTuples() {
 		List<Tuple> newList = new List<>();
-		
-		
-		
-		
+
 		return newList;
 	}
 

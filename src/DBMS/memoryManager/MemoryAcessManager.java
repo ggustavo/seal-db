@@ -52,8 +52,8 @@ public class MemoryAcessManager {
 	public void request(char operation, Tuple tuple) {
 		if(!Kernel.ENABLE_HOT_COLD_DATA_ALGORITHMS || !started)return; 
 		if(!tuple.getTable().isSystemTable() && !tuple.getTable().isTemp()) {
-			algorithm.request(operation, tuple);			
 			if(Kernel.ENABLE_LOG_REQUESTS)saveLog(tuple.getFullTupleID(), operation);
+			algorithm.request(operation, tuple);			
 		}
 		
 	}
@@ -89,7 +89,11 @@ public class MemoryAcessManager {
 	}
 
 	public void closeLog() {
-		if(logRequests!=null)logRequests.close();
+		
+		if(logRequests!=null) {
+			logRequests.flush();
+			logRequests.close();
+		}
 	}
 	
 }

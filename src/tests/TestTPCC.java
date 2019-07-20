@@ -19,8 +19,8 @@ public class TestTPCC {
 			Kernel.ENABLE_RECOVERY = false;	
 			Kernel.ENABLE_FAST_RECOVERY_STRATEGIE = false;
 			
-			Kernel.ENABLE_LOG_REQUESTS = false;
-			Kernel.ENABLE_HOT_COLD_DATA_ALGORITHMS = false;
+			Kernel.ENABLE_LOG_REQUESTS = true;
+			Kernel.ENABLE_HOT_COLD_DATA_ALGORITHMS = true;
 			Kernel.MEMORY_SIZE_TUPLES = 100000;
 			
 			Kernel.TRANSACTION_NUMBER_OF_WORKERS = 16;

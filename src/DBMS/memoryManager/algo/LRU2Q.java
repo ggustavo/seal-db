@@ -33,8 +33,8 @@ public class LRU2Q extends Memory{
 		listInSize = (int) (capacity / 4); //25%
 		listHotSize = (int) (capacity * 0.4); //40%
 		listOutSize = (int) (listHotSize * 0.5);//50% do hot
-		
-//		listHotSize += (int) (capacity * 0.15);
+		listHotSize += (int) (capacity * 0.15);
+			
 //		listColdSize = (int) (capacity * 0.15);
 //	
 //		System.out.println("capacity: " + capacity);
@@ -176,7 +176,6 @@ public class LRU2Q extends Memory{
 				node = node.getNext();
 			}
 			logRequests.close();		
-			logRequests.close();
 		} catch (IOException e) {
 			
 			e.printStackTrace();

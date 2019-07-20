@@ -57,7 +57,9 @@ public abstract class Memory { //Algorithm
 		String date = dt.format(new Date());
 		
 		try {
-			PrintWriter logRequests = new PrintWriter(new FileWriter(new File(date+" coldlist.tuples") ,  true));
+			String name = Kernel.getMemoryAcessManager().getAlgorithm().getClass().getSimpleName();
+			
+			PrintWriter logRequests = new PrintWriter(new FileWriter(new File(date+ " "+ name +" coldlist.tuples") ,  true));
 		
 			
 			Node<Tuple> node = coldList.getHead();
