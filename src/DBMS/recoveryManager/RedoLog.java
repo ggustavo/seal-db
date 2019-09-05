@@ -9,8 +9,7 @@ import java.util.logging.Level;
 import DBMS.Kernel;
 import DBMS.fileManager.Schema;
 import DBMS.fileManager.dataAcessManager.file.log.FullTreeLog;
-import DBMS.fileManager.dataAcessManager.file.log.ParallelTreeLog;
-import DBMS.fileManager.dataAcessManager.file.log.HybridTreeLog;
+import DBMS.fileManager.dataAcessManager.file.log.IndexedAsychronousLog;
 import DBMS.fileManager.dataAcessManager.file.log.LogHandle;
 import DBMS.fileManager.dataAcessManager.file.log.LogInterator;
 import DBMS.fileManager.dataAcessManager.file.log.SequentialLog;
@@ -34,13 +33,13 @@ public class RedoLog implements IRecoveryManager {
 		if(Kernel.LOG_STRATEGY == Kernel.FULL_TREE_lOG) {
 			logHandle = new FullTreeLog(file);
 		}
-		if(Kernel.LOG_STRATEGY == Kernel.HYBRID_TREE_lOG) {
-			logHandle = new HybridTreeLog(file);
+		if(Kernel.LOG_STRATEGY == Kernel.ASYCHRONOUS_INDEXED_LOG) {
+			logHandle = new IndexedAsychronousLog(file);
+		}
+		if(Kernel.LOG_STRATEGY == Kernel.SYCHRONOUS_INDEXED_LOG) {
+			logHandle = new IndexedAsychronousLog(file);
 		}
 		
-		if(Kernel.LOG_STRATEGY == Kernel.PARALLEL_HYBRID_TREE_lOG) {
-			logHandle = new ParallelTreeLog(file);
-		}
 		CURRENT_LSN = logHandle.readLastLSN();
 	}
 	
@@ -56,8 +55,10 @@ public class RedoLog implements IRecoveryManager {
 			if(Kernel.ENABLE_RECOVERY){
 				Kernel.log(Kernel.class, "Use " + logHandle.getClass().getSimpleName() + " Strategy", Level.CONFIG);
 			
-				if(logHandle instanceof ParallelTreeLog) {
-					((ParallelTreeLog) logHandle).startSyncTree();
+				if(logHandle instanceof IndexedAsychronousLog) {
+					
+					((IndexedAsychronousLog) logHandle).syncTree();
+					
 				}
 				
 				
@@ -67,16 +68,16 @@ public class RedoLog implements IRecoveryManager {
 						@Override
 						public void run() {
 							recovery();
-							if(logHandle instanceof ParallelTreeLog) {
-								((ParallelTreeLog) logHandle).startSyncThread();
+							if(logHandle instanceof IndexedAsychronousLog) {
+								((IndexedAsychronousLog) logHandle).startSyncThread();
 							}
 							
 						}
 					}).start();
 				}else {
 					recovery();
-					if(logHandle instanceof ParallelTreeLog) {
-						((ParallelTreeLog) logHandle).startSyncThread();
+					if(logHandle instanceof IndexedAsychronousLog) {
+						((IndexedAsychronousLog) logHandle).startSyncThread();
 					}
 				}
 		

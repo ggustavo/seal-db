@@ -70,8 +70,8 @@ public abstract class Kernel {
 	
 	public static final char SEQUENTIAL_lOG = '1';
 	public static final char FULL_TREE_lOG = '2';
-	public static final char HYBRID_TREE_lOG = '3';
-	public static final char PARALLEL_HYBRID_TREE_lOG = '4';
+	public static final char SYCHRONOUS_INDEXED_LOG  = '3';
+	public static final char ASYCHRONOUS_INDEXED_LOG = '4';
 
 	public static char LOG_STRATEGY = SEQUENTIAL_lOG;
 	

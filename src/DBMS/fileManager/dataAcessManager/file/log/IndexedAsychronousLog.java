@@ -13,32 +13,30 @@ import DBMS.recoveryManager.RedoLog;
 
 
 
-public class HybridTreeLog implements LogHandle{
+public class IndexedAsychronousLog implements LogHandle{
 
-	private long LAST_LSN = -1;
-	private long LAST_LSN_POINTER = -1;
+	protected long LAST_LSN = -1;
+	protected long LAST_LSN_POINTER = -1;
 	
-	private static final int LAST_LSN_KEY = 1;
-	private static final int LAST_LSN_POINTER_KEY = 2;
+	protected static final int LAST_LSN_KEY = 1;
+	protected static final int LAST_LSN_POINTER_KEY = 2;
 	
 
-	private long LAST_LSN_TREE_POINTER_CURRENT = -1;
-	private long LAST_LSN_LOG_CURRENT = -1;
+	protected long LAST_LSN_TREE_POINTER_CURRENT = -1;
+	protected long LAST_LSN_LOG_CURRENT = -1;
 	
 	
-	private SortedMap<String, Long> map;
-	private SortedMap<Integer, Long> meta;
-	private DB db;
+	protected SortedMap<String, Long> map;
+	protected SortedMap<Integer, Long> meta;
+	protected DB db;
 
-	private long fix_Last_LSN_SEQ = -1;
+	protected long fix_Last_LSN_SEQ = -1;
 	
-	private SequentialLog sequentialLog;
+	protected SequentialLog sequentialLog;
 	
-	public HybridTreeLog(String file) {
+	public IndexedAsychronousLog(String file) {
 		sequentialLog = new SequentialLog(file);
-		
 
-		
 		db = DBMaker.openFile(Kernel.DATABASE_FILES_FOLDER+ File.separator + "parallel_hybrid_tree_log")
 				.disableTransactions()
 				.closeOnExit()
@@ -75,30 +73,30 @@ public class HybridTreeLog implements LogHandle{
 
 	
 	public void startSyncThread() {
-//		Kernel.log(ParallelTreeLog.class, "Synchronized Tree Thread Started", Level.CONFIG);
-//		new Thread(new Runnable() {
-//			
-//
-//			@Override
-//			public void run() {
-//
-//				try {
-//					while (Kernel.ENABLE_RECOVERY) {
-//						
-//						
-//						Thread.sleep(30000);
-//						syncSequentialToIndexed();
-//						db.commit();							
-//						
-//
-//					}
-//				} catch (InterruptedException e) {
-//					// TODO Auto-generated catch block
-//					e.printStackTrace();
-//				}
-//
-//			}
-//		}).start();
+		Kernel.log(IndexedAsychronousLog.class, "Synchronized Tree Thread Started", Level.CONFIG);
+		new Thread(new Runnable() {
+			
+
+			@Override
+			public void run() {
+
+				try {
+					while (Kernel.ENABLE_RECOVERY) {
+						
+						
+						Thread.sleep(30000);
+						syncSequentialToIndexed();
+						db.commit();							
+						
+
+					}
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
+			}
+		}).start();
 	}
 	
 	public synchronized String getDataTuple(String tupleId) throws IOException {
@@ -126,15 +124,13 @@ public class HybridTreeLog implements LogHandle{
 		sequentialLog.append(lsn, trasaction, operation, tupleID, obj);
 		LAST_LSN_LOG_CURRENT = lsn;
 		
-		flush();
-		sequentialLog.flush();
-		//meta.put(233, (long) 43423);
-		//db.commit();
+		//flush();
+		//sequentialLog.flush();
 		
 	}
 	
 
-	private void appendTree(int lsn, String tupleID, long pointer) {
+	protected void appendTree(int lsn, String tupleID, long pointer) {
 		map.put(tupleID, pointer);
 		meta.put(LAST_LSN_KEY, (long)lsn);
 		meta.put(LAST_LSN_POINTER_KEY, pointer);
@@ -142,7 +138,7 @@ public class HybridTreeLog implements LogHandle{
 	}
 	
 	
-	private int countRecords = 0;
+	protected int countRecords = 0;
 	public synchronized int syncSequentialToIndexed(){
 		final Long target = LAST_LSN_LOG_CURRENT;
 		sequentialLog.interator(LAST_LSN_TREE_POINTER_CURRENT, new LogInterator() {
@@ -196,8 +192,6 @@ public class HybridTreeLog implements LogHandle{
 
 	public void interator(LogInterator interator, boolean end) {
 
-	
-		
 		@SuppressWarnings("unused")
 		char action = end ? LogInterator.PREV : LogInterator.NEXT;
 		try {
@@ -235,7 +229,7 @@ public class HybridTreeLog implements LogHandle{
 	}
 
 
-	public synchronized void startSyncTree() {
+	public synchronized void syncTree() {
 		
 		long lStartTime = System.nanoTime();
 
@@ -243,8 +237,8 @@ public class HybridTreeLog implements LogHandle{
 		long lastTreeLSN = meta.get(LAST_LSN_KEY);
 
 		if (lastTreeLSN < lastSequetialLSN) {
-			Kernel.log(ParallelTreeLog.class, "Tree Log LSN Unsynchronized", Level.CONFIG);
-			Kernel.log(ParallelTreeLog.class,"Last Tree LSN: " + lastTreeLSN + ", Last Sequential LSN: " + lastSequetialLSN, Level.CONFIG);
+			Kernel.log(IndexedAsychronousLog.class, "Tree Log LSN Unsynchronized", Level.CONFIG);
+			Kernel.log(IndexedAsychronousLog.class,"Last Tree LSN: " + lastTreeLSN + ", Last Sequential LSN: " + lastSequetialLSN, Level.CONFIG);
 
 			sequentialLog.interator(new LogInterator() {
 

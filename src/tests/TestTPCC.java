@@ -24,7 +24,7 @@ public class TestTPCC {
 			Kernel.MEMORY_SIZE_TUPLES = 100000;
 			
 			Kernel.TRANSACTION_NUMBER_OF_WORKERS = 16;
-			//Kernel.LOG_STRATEGY = Kernel.PARALLEL_HYBRID_TREE_lOG;
+			//Kernel.LOG_STRATEGY = Kernel.ASYCHRONOUS_INDEXED_LOG;
 			Kernel.LOG_STRATEGY = Kernel.SEQUENTIAL_lOG;
 		
 			
