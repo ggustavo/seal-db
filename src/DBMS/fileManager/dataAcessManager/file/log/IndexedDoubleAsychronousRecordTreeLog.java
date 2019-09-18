@@ -13,7 +13,7 @@ import DBMS.recoveryManager.RedoLog;
 
 
 
-public class IndexedAsychronousLog implements LogHandle{
+public class IndexedDoubleAsychronousRecordTreeLog implements LogHandle{
 
 	protected long LAST_LSN = -1;
 	protected long LAST_LSN_POINTER = -1;
@@ -26,17 +26,21 @@ public class IndexedAsychronousLog implements LogHandle{
 	protected long LAST_LSN_LOG_CURRENT = -1;
 	
 	
-	protected SortedMap<String, Long> map;
+	protected SortedMap<String, String> map;
 	protected SortedMap<Integer, Long> meta;
 	protected DB db;
 
 	protected long fix_Last_LSN_SEQ = -1;
 	
-	protected SequentialLog sequentialLog;
+	protected SequentialLog writeSequentialLog;
 	
-	public IndexedAsychronousLog(String file) {
-		sequentialLog = new SequentialLog(file);
-
+	protected SequentialLog readSequentialLog;
+	
+	public IndexedDoubleAsychronousRecordTreeLog(String file) {
+		writeSequentialLog = new SequentialLog(file);
+		readSequentialLog = new SequentialLog(file);
+		
+		
 		db = DBMaker.openFile(Kernel.DATABASE_FILES_FOLDER+ File.separator + this.getClass().getSimpleName())
 				.disableTransactions()
 				.closeOnExit()
@@ -46,6 +50,7 @@ public class IndexedAsychronousLog implements LogHandle{
 		
 		map = db.getTreeMap("log");
 		if(map == null)map = db.createTreeMap("log");
+	
 		
 		meta = db.getTreeMap("meta");
 		if(meta == null)meta = db.createTreeMap("meta");
@@ -73,7 +78,7 @@ public class IndexedAsychronousLog implements LogHandle{
 
 	
 	public void startSyncThread() {
-		Kernel.log(IndexedAsychronousLog.class, "Synchronized Tree Thread Started", Level.CONFIG);
+		Kernel.log(IndexedDoubleAsychronousRecordTreeLog.class, "Synchronized Tree Thread Started", Level.CONFIG);
 		new Thread(new Runnable() {
 			
 
@@ -101,9 +106,9 @@ public class IndexedAsychronousLog implements LogHandle{
 	
 	public synchronized String getDataTuple(String tupleId) throws IOException {
 		
-		Long pointer = map.get(tupleId);
-
-		String record = sequentialLog.readRecord(pointer);
+		//Long pointer = map.get(tupleId);
+		//String record = readSequentialLog.readRecord(pointer);
+		String record = map.get(tupleId);
 
 		String values[] = record.split(LOG_SEPARATOR);
 //		int lsn = Integer.parseInt(values[0]);
@@ -121,17 +126,26 @@ public class IndexedAsychronousLog implements LogHandle{
 	
 	public synchronized void append(int lsn, int trasaction, char operation, String tupleID, String obj) {
 
-		sequentialLog.append(lsn, trasaction, operation, tupleID, obj);
+		writeSequentialLog.append(lsn, trasaction, operation, tupleID, obj);
 		LAST_LSN_LOG_CURRENT = lsn;
 		
 		//flush();
-		//sequentialLog.flush();
+		writeSequentialLog.flush();
 		
 	}
 	
 
-	protected void appendTree(int lsn, String tupleID, long pointer) {
-		map.put(tupleID, pointer);
+	protected void appendTree(int lsn, String tupleID, int trasaction, char operation ,  long pointer, String obj) {
+		if(tupleID == null){
+			System.out.println("ERRO - " + this.getClass().getSimpleName());
+			return;
+		}
+		String record =  lsn + LOG_SEPARATOR
+				   + trasaction  + LOG_SEPARATOR
+				   + operation  + LOG_SEPARATOR
+				   + obj;
+		
+		map.put(tupleID, record);
 		meta.put(LAST_LSN_KEY, (long)lsn);
 		meta.put(LAST_LSN_POINTER_KEY, pointer);
 		LAST_LSN_TREE_POINTER_CURRENT = pointer;
@@ -141,7 +155,7 @@ public class IndexedAsychronousLog implements LogHandle{
 	protected int countRecords = 0;
 	public synchronized int syncSequentialToIndexed(){
 		final Long target = LAST_LSN_LOG_CURRENT;
-		sequentialLog.interator(LAST_LSN_TREE_POINTER_CURRENT, new LogInterator() {
+		readSequentialLog.interator(LAST_LSN_TREE_POINTER_CURRENT, new LogInterator() {
 			
 			boolean first = true;
 			@Override
@@ -160,8 +174,11 @@ public class IndexedAsychronousLog implements LogHandle{
 				
 				
 				String id = obj.split(RedoLog.TUPLE_ID_SEPARATOR)[0];
+			
+				//String stringTuple = obj.split(RedoLog.TUPLE_ID_SEPARATOR)[1];
 				
-				appendTree(lsn, id, filePointer);
+				
+				appendTree(lsn, id, trasaction, operation, filePointer, obj);
 				countRecords++;
 				return LogInterator.NEXT;
 			}
@@ -174,13 +191,14 @@ public class IndexedAsychronousLog implements LogHandle{
 		}, false);
 		int aux = countRecords;
 		System.out.println("Sync Tree -- Records: " + aux + " LAST_LSN: " + target);
+		db.commit();
 		countRecords = 0;
 		return aux;
 	}
 	
 
 	public int readLastLSN() {
-		LAST_LSN_LOG_CURRENT = sequentialLog.readLastLSN();
+		LAST_LSN_LOG_CURRENT = writeSequentialLog.readLastLSN();
 		fix_Last_LSN_SEQ = LAST_LSN_LOG_CURRENT;
 		return (int)LAST_LSN_LOG_CURRENT;
 	}
@@ -196,14 +214,15 @@ public class IndexedAsychronousLog implements LogHandle{
 		char action = end ? LogInterator.PREV : LogInterator.NEXT;
 		try {
 			
-			int count = 0;
-			for (Long pointer : map.values()) {
+			//int count = 0;
+			for (String record : map.values()) {
 			
-				if(count == fix_Last_LSN_SEQ) {
-					break;
-				}
+//				if(count == fix_Last_LSN_SEQ) {
+//					System.out.println("fix " + fix_Last_LSN_SEQ);
+//					break;
+//				}
 					
-				String record = sequentialLog.readRecord(pointer);
+			//	String record = readSequentialLog.readRecord(pointer);
 		
 				String values[] = record.split(LOG_SEPARATOR);
 				int lsn = Integer.parseInt(values[0]);
@@ -211,8 +230,9 @@ public class IndexedAsychronousLog implements LogHandle{
 				if(lsn <= fix_Last_LSN_SEQ ) {
 					int trasaction = Integer.parseInt(values[1]);
 					char operation = values[2].charAt(0);
-					long filePointer = pointer;
-					count++;
+					//long filePointer = pointer;
+					long filePointer = 1;
+					//count++;
 					action = interator.readRecord(lsn, trasaction, operation, values[3], filePointer);	
 				}else {
 					System.out.println("PASS: " + fix_Last_LSN_SEQ + " >=" + lsn);
@@ -233,7 +253,8 @@ public class IndexedAsychronousLog implements LogHandle{
 		
 		long lStartTime = System.nanoTime();
 
-		long lastSequetialLSN = sequentialLog.readLastLSN();
+		long lastSequetialLSN = readSequentialLog.readLastLSN();
+		
 		long lastTreeLSN = meta.get(LAST_LSN_KEY);
 		long lastPointer = meta.get(LAST_LSN_POINTER_KEY);
 		
@@ -242,16 +263,20 @@ public class IndexedAsychronousLog implements LogHandle{
 			Kernel.log(IndexedDoubleAsychronousRecordTreeLog.class,"Last Tree LSN: " + lastTreeLSN + ", Last Sequential LSN: " + lastSequetialLSN + " LastPointer: " + lastPointer, Level.CONFIG);
 			
 
-			sequentialLog.interator(lastPointer, new LogInterator() {
+			readSequentialLog.interator(lastPointer, new LogInterator() {
 
 				@Override
 				public char readRecord(int lsn, int trasaction, char operation, String obj, long filePointer) {
-
+				
+					
 					if (obj == null)
 						return LogInterator.STOP;
 
 					String id = obj.split(RedoLog.TUPLE_ID_SEPARATOR)[0];
-					appendTree(lsn, id, filePointer);
+		
+			//		appendTree(lsn, id, filePointer,stringTuple);
+					appendTree(lsn, id, trasaction, operation, filePointer, obj);
+				
 
 					return LogInterator.NEXT;
 				}
@@ -263,7 +288,8 @@ public class IndexedAsychronousLog implements LogHandle{
 				}
 			}, false);
 			
-			Kernel.log(this.getClass(),"Finish Synchronize Tree process... total time: " + (System.nanoTime() - lStartTime) / 1000000 + " ms",Level.WARNING);
+			long newLastTreeLSN = meta.get(LAST_LSN_KEY); //NEW
+			Kernel.log(this.getClass(),"Finish Synchronize Tree process... current LSN: "+newLastTreeLSN+"| total time: " + (System.nanoTime() - lStartTime) / 1000000 + " ms",Level.WARNING);
 			
 			db.commit();
 			
@@ -273,7 +299,7 @@ public class IndexedAsychronousLog implements LogHandle{
 	@Override
 	public void flush() {
 		db.commit();
-		sequentialLog.flush();
+		writeSequentialLog.flush();
 		
 	}
 
@@ -281,7 +307,7 @@ public class IndexedAsychronousLog implements LogHandle{
 	@Override
 	public void close() {
 		db.close();
-		sequentialLog.close();
+		writeSequentialLog.close();
 		
 		
 	}

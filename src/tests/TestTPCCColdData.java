@@ -6,26 +6,25 @@ import DBMS.fileManager.catalog.InitializerListen;
 import DBMS.memoryManager.algo.ARC;
 import DBMS.memoryManager.algo.LRU;
 import DBMS.memoryManager.algo.LRU2Q;
+import DBMS.memoryManager.algo.LRU2Q_V2;
 import DBMS.queryProcessing.MTable;
 import DBMS.queryProcessing.queryEngine.AcquireLockException;
 import DBMS.transactionManager.Transaction;
 import DBMS.transactionManager.TransactionRunnable;
 
-public class TestTPCC {
+public class TestTPCCColdData {
 	
 	public static void main(String[] args) {
 		try {
 			
-			Kernel.ENABLE_RECOVERY = true;	
+			Kernel.ENABLE_RECOVERY = false;	
 			Kernel.ENABLE_FAST_RECOVERY_STRATEGIE = false;
 			
-			Kernel.ENABLE_LOG_REQUESTS = false;
-			Kernel.ENABLE_HOT_COLD_DATA_ALGORITHMS = false;
+			Kernel.ENABLE_LOG_REQUESTS = true;
+			Kernel.ENABLE_HOT_COLD_DATA_ALGORITHMS = true;
 			Kernel.MEMORY_SIZE_TUPLES = 100000;
 			
 			Kernel.TRANSACTION_NUMBER_OF_WORKERS = 4;
-
-			//Kernel.LOG_STRATEGY = Kernel.ASYCHRONOUS_DOUBLE_INDEXED_RECORD_TREE_LOG;
 			Kernel.LOG_STRATEGY = Kernel.SEQUENTIAL_lOG;
 			
 			Kernel.getInitializer().setInitializerListen(new InitializerListen() {
@@ -38,7 +37,7 @@ public class TestTPCC {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
-					//TPCCLoad.exec(systemTransaction, null);
+					TPCCLoad.exec(systemTransaction, null);
 					
 				}
 
@@ -46,38 +45,20 @@ public class TestTPCC {
 			Kernel.getMemoryAcessManager().setAlgorithm(new LRU());
 		//	Kernel.getMemoryAcessManager().setAlgorithm(new ARC());
 		//	Kernel.getMemoryAcessManager().setAlgorithm(new LRU2Q());
+		//	Kernel.getMemoryAcessManager().setAlgorithm(new LRU2Q_V2());
 			Kernel.start(); 
-			
-			
-			
-			System.out.println();
-			for (Schema schema : Kernel.getCatalog().getShemas()) {
-				for (MTable table : schema.getTables()) {
-					if(table.isTemp() || table.isSystemTable())continue;		
-					System.out.println(table.getName() + " " + table.getTuplesHash().size()+"/"+table.getNumberOfTuples(null));
-					//table.setNumberOfTuples(table.getTuplesHash().size());
-					//Kernel.getInitializer().saveTableSizeMetaData(null, table);
-				}
-			}
-			System.out.println();
-//			
-			
-			
-			//loadData();
-			
-			//TransactionsThroughput.start();
-//			
 
-//////			
+			
+			
 			TPCCBenchmark benchmark = new TPCCBenchmark();
-			benchmark.numberOfTransactions  = 400;
+			benchmark.numberOfTransactions  = 1;
 			benchmark.saveEventsLog = false;
-			benchmark.serial = false;
+			benchmark.serial = true;
 			TPCCBenchmark.debug = false;
 			
-			benchmark.RANDOM_VALUES = true;
-			benchmark.EXECUTE_ALL = false;
-			//benchmark.startBenchmark();
+			benchmark.RANDOM_VALUES = false;
+			benchmark.EXECUTE_ALL = true;
+			benchmark.startBenchmark();
 
 			
 //			Thread.sleep(80000);

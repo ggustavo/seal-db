@@ -10,6 +10,7 @@ import DBMS.Kernel;
 import DBMS.fileManager.Schema;
 import DBMS.fileManager.dataAcessManager.file.log.FullTreeLog;
 import DBMS.fileManager.dataAcessManager.file.log.IndexedAsychronousLog;
+import DBMS.fileManager.dataAcessManager.file.log.IndexedDoubleAsychronousRecordTreeLog;
 import DBMS.fileManager.dataAcessManager.file.log.LogHandle;
 import DBMS.fileManager.dataAcessManager.file.log.LogInterator;
 import DBMS.fileManager.dataAcessManager.file.log.SequentialLog;
@@ -40,6 +41,15 @@ public class RedoLog implements IRecoveryManager {
 			logHandle = new IndexedAsychronousLog(file);
 		}
 		
+		if(Kernel.LOG_STRATEGY == Kernel.ASYCHRONOUS_DOUBLE_INDEXED_LOG) {
+			logHandle = new IndexedAsychronousLog(file);
+		}
+		
+		if(Kernel.LOG_STRATEGY == Kernel.ASYCHRONOUS_DOUBLE_INDEXED_RECORD_TREE_LOG) {
+			logHandle = new IndexedDoubleAsychronousRecordTreeLog(file);
+		}
+		
+		
 		CURRENT_LSN = logHandle.readLastLSN();
 	}
 	
@@ -55,10 +65,11 @@ public class RedoLog implements IRecoveryManager {
 			if(Kernel.ENABLE_RECOVERY){
 				Kernel.log(Kernel.class, "Use " + logHandle.getClass().getSimpleName() + " Strategy", Level.CONFIG);
 			
-				if(logHandle instanceof IndexedAsychronousLog) {
-					
-					((IndexedAsychronousLog) logHandle).syncTree();
-					
+				if(logHandle instanceof IndexedAsychronousLog ) {	
+					((IndexedAsychronousLog) logHandle).syncTree();					
+				}
+				if(logHandle instanceof IndexedDoubleAsychronousRecordTreeLog){
+					((IndexedDoubleAsychronousRecordTreeLog) logHandle).syncTree();		
 				}
 				
 				
@@ -70,6 +81,9 @@ public class RedoLog implements IRecoveryManager {
 							recovery();
 							if(logHandle instanceof IndexedAsychronousLog) {
 								((IndexedAsychronousLog) logHandle).startSyncThread();
+							}
+							if(logHandle instanceof IndexedDoubleAsychronousRecordTreeLog){
+								((IndexedDoubleAsychronousRecordTreeLog) logHandle).startSyncThread();	
 							}
 							
 						}
@@ -250,8 +264,8 @@ public class RedoLog implements IRecoveryManager {
 			
 		}
 
-
-		Kernel.log(this.getClass(),"Finish Commit Transaction: " + transaction.getIdT() + " operations: " + transaction.getOperations().size() + " Writes: " + writes,Level.WARNING);
+		// " operations: " + transaction.getOperations().size()
+		Kernel.log(this.getClass(),"Finish Commit Transaction: " + transaction.getIdT()  + " Writes: " + writes,Level.WARNING);
 		
 	}
 	

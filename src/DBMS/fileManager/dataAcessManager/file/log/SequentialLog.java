@@ -22,7 +22,6 @@ public class SequentialLog implements LogHandle {
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
-	
 	}
 	
 

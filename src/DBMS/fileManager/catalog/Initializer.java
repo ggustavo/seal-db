@@ -59,10 +59,6 @@ public class Initializer {
 		defaultSchema.addTable(columns);
 		//******************************************************************
 		
-		if(initializerListen != null) {
-			initializerListen.afterStartSystemCatalog(systemTransaction);
-		}
-		
 		
 		db = DBMaker.openFile(Kernel.DATABASE_FILES_FOLDER+ File.separator + "tables_meta")
 				.disableTransactions()
@@ -73,7 +69,9 @@ public class Initializer {
 		tablesMeta = db.getTreeMap("meta");
 		if(tablesMeta == null)tablesMeta = db.createTreeMap("meta");
 		
-		
+		if(initializerListen != null) {
+			initializerListen.afterStartSystemCatalog(systemTransaction);
+		}
 		
 	}
 	private DB db;

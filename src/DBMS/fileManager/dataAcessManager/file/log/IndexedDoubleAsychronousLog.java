@@ -12,8 +12,8 @@ import DBMS.Kernel;
 import DBMS.recoveryManager.RedoLog;
 
 
-
-public class IndexedAsychronousLog implements LogHandle{
+//CHECK SYNC TREE!!!!
+public class IndexedDoubleAsychronousLog implements LogHandle{
 
 	protected long LAST_LSN = -1;
 	protected long LAST_LSN_POINTER = -1;
@@ -32,11 +32,15 @@ public class IndexedAsychronousLog implements LogHandle{
 
 	protected long fix_Last_LSN_SEQ = -1;
 	
-	protected SequentialLog sequentialLog;
+	protected SequentialLog writeSequentialLog;
 	
-	public IndexedAsychronousLog(String file) {
-		sequentialLog = new SequentialLog(file);
-
+	protected SequentialLog readSequentialLog;
+	
+	public IndexedDoubleAsychronousLog(String file) {
+		writeSequentialLog = new SequentialLog(file);
+		readSequentialLog = new SequentialLog(file);
+		
+		
 		db = DBMaker.openFile(Kernel.DATABASE_FILES_FOLDER+ File.separator + this.getClass().getSimpleName())
 				.disableTransactions()
 				.closeOnExit()
@@ -46,6 +50,7 @@ public class IndexedAsychronousLog implements LogHandle{
 		
 		map = db.getTreeMap("log");
 		if(map == null)map = db.createTreeMap("log");
+	
 		
 		meta = db.getTreeMap("meta");
 		if(meta == null)meta = db.createTreeMap("meta");
@@ -73,7 +78,7 @@ public class IndexedAsychronousLog implements LogHandle{
 
 	
 	public void startSyncThread() {
-		Kernel.log(IndexedAsychronousLog.class, "Synchronized Tree Thread Started", Level.CONFIG);
+		Kernel.log(IndexedDoubleAsychronousLog.class, "Synchronized Tree Thread Started", Level.CONFIG);
 		new Thread(new Runnable() {
 			
 
@@ -103,7 +108,7 @@ public class IndexedAsychronousLog implements LogHandle{
 		
 		Long pointer = map.get(tupleId);
 
-		String record = sequentialLog.readRecord(pointer);
+		String record = readSequentialLog.readRecord(pointer);
 
 		String values[] = record.split(LOG_SEPARATOR);
 //		int lsn = Integer.parseInt(values[0]);
@@ -121,7 +126,7 @@ public class IndexedAsychronousLog implements LogHandle{
 	
 	public synchronized void append(int lsn, int trasaction, char operation, String tupleID, String obj) {
 
-		sequentialLog.append(lsn, trasaction, operation, tupleID, obj);
+		writeSequentialLog.append(lsn, trasaction, operation, tupleID, obj);
 		LAST_LSN_LOG_CURRENT = lsn;
 		
 		//flush();
@@ -141,7 +146,7 @@ public class IndexedAsychronousLog implements LogHandle{
 	protected int countRecords = 0;
 	public synchronized int syncSequentialToIndexed(){
 		final Long target = LAST_LSN_LOG_CURRENT;
-		sequentialLog.interator(LAST_LSN_TREE_POINTER_CURRENT, new LogInterator() {
+		readSequentialLog.interator(LAST_LSN_TREE_POINTER_CURRENT, new LogInterator() {
 			
 			boolean first = true;
 			@Override
@@ -180,7 +185,7 @@ public class IndexedAsychronousLog implements LogHandle{
 	
 
 	public int readLastLSN() {
-		LAST_LSN_LOG_CURRENT = sequentialLog.readLastLSN();
+		LAST_LSN_LOG_CURRENT = writeSequentialLog.readLastLSN();
 		fix_Last_LSN_SEQ = LAST_LSN_LOG_CURRENT;
 		return (int)LAST_LSN_LOG_CURRENT;
 	}
@@ -203,7 +208,7 @@ public class IndexedAsychronousLog implements LogHandle{
 					break;
 				}
 					
-				String record = sequentialLog.readRecord(pointer);
+				String record = readSequentialLog.readRecord(pointer);
 		
 				String values[] = record.split(LOG_SEPARATOR);
 				int lsn = Integer.parseInt(values[0]);
@@ -233,16 +238,14 @@ public class IndexedAsychronousLog implements LogHandle{
 		
 		long lStartTime = System.nanoTime();
 
-		long lastSequetialLSN = sequentialLog.readLastLSN();
+		long lastSequetialLSN = readSequentialLog.readLastLSN();
 		long lastTreeLSN = meta.get(LAST_LSN_KEY);
-		long lastPointer = meta.get(LAST_LSN_POINTER_KEY);
-		
-		if (lastTreeLSN < lastSequetialLSN) {
-			Kernel.log(IndexedDoubleAsychronousRecordTreeLog.class, "Tree Log LSN Unsynchronized", Level.CONFIG);
-			Kernel.log(IndexedDoubleAsychronousRecordTreeLog.class,"Last Tree LSN: " + lastTreeLSN + ", Last Sequential LSN: " + lastSequetialLSN + " LastPointer: " + lastPointer, Level.CONFIG);
-			
 
-			sequentialLog.interator(lastPointer, new LogInterator() {
+		if (lastTreeLSN < lastSequetialLSN) {
+			Kernel.log(IndexedDoubleAsychronousLog.class, "Tree Log LSN Unsynchronized", Level.CONFIG);
+			Kernel.log(IndexedDoubleAsychronousLog.class,"Last Tree LSN: " + lastTreeLSN + ", Last Sequential LSN: " + lastSequetialLSN, Level.CONFIG);
+
+			readSequentialLog.interator(new LogInterator() {
 
 				@Override
 				public char readRecord(int lsn, int trasaction, char operation, String obj, long filePointer) {
@@ -273,7 +276,7 @@ public class IndexedAsychronousLog implements LogHandle{
 	@Override
 	public void flush() {
 		db.commit();
-		sequentialLog.flush();
+		writeSequentialLog.flush();
 		
 	}
 
@@ -281,7 +284,7 @@ public class IndexedAsychronousLog implements LogHandle{
 	@Override
 	public void close() {
 		db.close();
-		sequentialLog.close();
+		writeSequentialLog.close();
 		
 		
 	}

@@ -13,7 +13,7 @@ public class IndexedSychronousLog extends IndexedAsychronousLog{
 		super.append(lsn, trasaction, operation, tupleID, obj);
 		
 		super.flush();
-		super.sequentialLog.flush();
+		
 		
 	}
 	
