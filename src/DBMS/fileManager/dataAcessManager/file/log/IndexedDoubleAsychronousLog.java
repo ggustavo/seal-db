@@ -36,7 +36,10 @@ public class IndexedDoubleAsychronousLog implements LogHandle{
 	
 	protected SequentialLog readSequentialLog;
 	
+	protected String file;
+	
 	public IndexedDoubleAsychronousLog(String file) {
+		this.file = file;
 		writeSequentialLog = new SequentialLog(file);
 		readSequentialLog = new SequentialLog(file);
 		
@@ -104,10 +107,13 @@ public class IndexedDoubleAsychronousLog implements LogHandle{
 		}).start();
 	}
 	
-	public synchronized String getDataTuple(String tupleId) throws IOException {
+	public String getDataTuple(String tupleId) throws IOException {
 		
 		Long pointer = map.get(tupleId);
-
+			
+		
+	//	SequentialLog readSequentialLog = new SequentialLog(file);
+		
 		String record = readSequentialLog.readRecord(pointer);
 
 		String values[] = record.split(LOG_SEPARATOR);
@@ -130,7 +136,7 @@ public class IndexedDoubleAsychronousLog implements LogHandle{
 		LAST_LSN_LOG_CURRENT = lsn;
 		
 		//flush();
-		//sequentialLog.flush();
+		//writeSequentialLog.flush();
 		
 	}
 	
@@ -201,12 +207,9 @@ public class IndexedDoubleAsychronousLog implements LogHandle{
 		char action = end ? LogInterator.PREV : LogInterator.NEXT;
 		try {
 			
-			int count = 0;
+			
 			for (Long pointer : map.values()) {
 			
-				if(count == fix_Last_LSN_SEQ) {
-					break;
-				}
 					
 				String record = readSequentialLog.readRecord(pointer);
 		
@@ -217,7 +220,6 @@ public class IndexedDoubleAsychronousLog implements LogHandle{
 					int trasaction = Integer.parseInt(values[1]);
 					char operation = values[2].charAt(0);
 					long filePointer = pointer;
-					count++;
 					action = interator.readRecord(lsn, trasaction, operation, values[3], filePointer);	
 				}else {
 					System.out.println("PASS: " + fix_Last_LSN_SEQ + " >=" + lsn);
@@ -266,7 +268,8 @@ public class IndexedDoubleAsychronousLog implements LogHandle{
 				}
 			}, false);
 			
-			Kernel.log(this.getClass(),"Finish Synchronize Tree process... total time: " + (System.nanoTime() - lStartTime) / 1000000 + " ms",Level.WARNING);
+			long newLastTreeLSN = meta.get(LAST_LSN_KEY); //NEW
+			Kernel.log(this.getClass(),"Finish Synchronize Tree process... current LSN: "+newLastTreeLSN+"| total time: " + (System.nanoTime() - lStartTime) / 1000000 + " ms",Level.WARNING);
 			
 			db.commit();
 			

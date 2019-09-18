@@ -10,7 +10,9 @@ import DBMS.Kernel;
 import DBMS.fileManager.Schema;
 import DBMS.fileManager.dataAcessManager.file.log.FullTreeLog;
 import DBMS.fileManager.dataAcessManager.file.log.IndexedAsychronousLog;
+import DBMS.fileManager.dataAcessManager.file.log.IndexedDoubleAsychronousLog;
 import DBMS.fileManager.dataAcessManager.file.log.IndexedDoubleAsychronousRecordTreeLog;
+import DBMS.fileManager.dataAcessManager.file.log.IndexedSychronousLog;
 import DBMS.fileManager.dataAcessManager.file.log.LogHandle;
 import DBMS.fileManager.dataAcessManager.file.log.LogInterator;
 import DBMS.fileManager.dataAcessManager.file.log.SequentialLog;
@@ -38,11 +40,11 @@ public class RedoLog implements IRecoveryManager {
 			logHandle = new IndexedAsychronousLog(file);
 		}
 		if(Kernel.LOG_STRATEGY == Kernel.SYCHRONOUS_INDEXED_LOG) {
-			logHandle = new IndexedAsychronousLog(file);
+			logHandle = new IndexedSychronousLog(file);
 		}
 		
 		if(Kernel.LOG_STRATEGY == Kernel.ASYCHRONOUS_DOUBLE_INDEXED_LOG) {
-			logHandle = new IndexedAsychronousLog(file);
+			logHandle = new IndexedDoubleAsychronousLog(file);
 		}
 		
 		if(Kernel.LOG_STRATEGY == Kernel.ASYCHRONOUS_DOUBLE_INDEXED_RECORD_TREE_LOG) {
@@ -71,6 +73,9 @@ public class RedoLog implements IRecoveryManager {
 				if(logHandle instanceof IndexedDoubleAsychronousRecordTreeLog){
 					((IndexedDoubleAsychronousRecordTreeLog) logHandle).syncTree();		
 				}
+				if(logHandle instanceof IndexedDoubleAsychronousLog ) {	
+					((IndexedDoubleAsychronousLog) logHandle).syncTree();					
+				}
 				
 				
 				if(Kernel.ENABLE_FAST_RECOVERY_STRATEGIE) {
@@ -85,6 +90,10 @@ public class RedoLog implements IRecoveryManager {
 							if(logHandle instanceof IndexedDoubleAsychronousRecordTreeLog){
 								((IndexedDoubleAsychronousRecordTreeLog) logHandle).startSyncThread();	
 							}
+							if(logHandle instanceof IndexedDoubleAsychronousLog ) {	
+								((IndexedDoubleAsychronousLog) logHandle).startSyncThread();					
+							}
+							
 							
 						}
 					}).start();

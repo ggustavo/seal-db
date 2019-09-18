@@ -17,7 +17,7 @@ public class TestTPCCColdData {
 	public static void main(String[] args) {
 		try {
 			
-			Kernel.ENABLE_RECOVERY = false;	
+			Kernel.ENABLE_RECOVERY = false;
 			Kernel.ENABLE_FAST_RECOVERY_STRATEGIE = false;
 			
 			Kernel.ENABLE_LOG_REQUESTS = true;

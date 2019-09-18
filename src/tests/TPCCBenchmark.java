@@ -192,7 +192,7 @@ public class TPCCBenchmark implements Callback{
 				String o_ol_cnt = getRandom("11", "8", "10", "5", "15", "6", "9","7", "12", "13", "14");
 				String o_all_local = "1";
 				
-				calcTime(() -> Q1_v22(transaction, w_id, d_id, c_id, o_ol_cnt, o_all_local ),"T"+transaction.getIdT()+"-Q1");
+				calcTime(() -> Q1(transaction, w_id, d_id, c_id, o_ol_cnt, o_all_local ),"T"+transaction.getIdT()+"-Q1");
 		
 			
 		} else {
@@ -202,7 +202,7 @@ public class TPCCBenchmark implements Callback{
 			String o_ol_cnt = "14";
 			String o_all_local = "1";
 			
-			calcTime(() -> Q1_v22(transaction, w_id, d_id, c_id, o_ol_cnt, o_all_local ),"T"+transaction.getIdT()+"-Q1");
+			calcTime(() -> Q1(transaction, w_id, d_id, c_id, o_ol_cnt, o_all_local ),"T"+transaction.getIdT()+"-Q1");
 			
 		}
 	
@@ -224,7 +224,7 @@ public class TPCCBenchmark implements Callback{
 				String c_id = ""+(gen.nextInt(3000) + 1);
 				boolean byname = gen.nextBoolean();
 				
-				calcTime(() -> Q2_v22(transaction,w_id, h_amount, d_id, c_last, c_d_id, c_w_id, c_id, byname),"T"+transaction.getIdT()+"-Q2");
+				calcTime(() -> Q2(transaction,w_id, h_amount, d_id, c_last, c_d_id, c_w_id, c_id, byname),"T"+transaction.getIdT()+"-Q2");
 			
 		}else{
 			
@@ -237,7 +237,7 @@ public class TPCCBenchmark implements Callback{
 			String c_id = "2400";
 			boolean byname = true;
 			
-			calcTime(() -> Q2_v22(transaction,w_id, h_amount, d_id, c_last, c_d_id, c_w_id, c_id, byname),"T"+transaction.getIdT()+"-Q2");
+			calcTime(() -> Q2(transaction,w_id, h_amount, d_id, c_last, c_d_id, c_w_id, c_id, byname),"T"+transaction.getIdT()+"-Q2");
 
 		}
 

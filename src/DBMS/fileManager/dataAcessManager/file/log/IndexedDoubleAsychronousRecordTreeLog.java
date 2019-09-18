@@ -104,7 +104,7 @@ public class IndexedDoubleAsychronousRecordTreeLog implements LogHandle{
 		}).start();
 	}
 	
-	public synchronized String getDataTuple(String tupleId) throws IOException {
+	public String getDataTuple(String tupleId) throws IOException {
 		
 		//Long pointer = map.get(tupleId);
 		//String record = readSequentialLog.readRecord(pointer);
@@ -130,7 +130,7 @@ public class IndexedDoubleAsychronousRecordTreeLog implements LogHandle{
 		LAST_LSN_LOG_CURRENT = lsn;
 		
 		//flush();
-		writeSequentialLog.flush();
+		//writeSequentialLog.flush();
 		
 	}
 	
@@ -288,8 +288,6 @@ public class IndexedDoubleAsychronousRecordTreeLog implements LogHandle{
 				}
 			}, false);
 			
-			long newLastTreeLSN = meta.get(LAST_LSN_KEY); //NEW
-			Kernel.log(this.getClass(),"Finish Synchronize Tree process... current LSN: "+newLastTreeLSN+"| total time: " + (System.nanoTime() - lStartTime) / 1000000 + " ms",Level.WARNING);
 			
 			db.commit();
 			

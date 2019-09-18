@@ -17,7 +17,7 @@ public class TestTPCC {
 		try {
 			
 			Kernel.ENABLE_RECOVERY = true;	
-			Kernel.ENABLE_FAST_RECOVERY_STRATEGIE = false;
+			Kernel.ENABLE_FAST_RECOVERY_STRATEGIE = true;
 			
 			Kernel.ENABLE_LOG_REQUESTS = false;
 			Kernel.ENABLE_HOT_COLD_DATA_ALGORITHMS = false;
@@ -25,8 +25,10 @@ public class TestTPCC {
 			
 			Kernel.TRANSACTION_NUMBER_OF_WORKERS = 4;
 
-			//Kernel.LOG_STRATEGY = Kernel.ASYCHRONOUS_DOUBLE_INDEXED_RECORD_TREE_LOG;
-			Kernel.LOG_STRATEGY = Kernel.SEQUENTIAL_lOG;
+			//Kernel.LOG_STRATEGY = Kernel.ASYCHRONOUS_DOUBLE_INDEXED_LOG;
+			Kernel.LOG_STRATEGY = Kernel.ASYCHRONOUS_DOUBLE_INDEXED_RECORD_TREE_LOG;
+			//Kernel.LOG_STRATEGY = Kernel.SEQUENTIAL_lOG;
+			
 			
 			Kernel.getInitializer().setInitializerListen(new InitializerListen() {
 				
@@ -48,7 +50,9 @@ public class TestTPCC {
 		//	Kernel.getMemoryAcessManager().setAlgorithm(new LRU2Q());
 			Kernel.start(); 
 			
+		
 			
+			//loadData();
 			
 			System.out.println();
 			for (Schema schema : Kernel.getCatalog().getShemas()) {
@@ -63,21 +67,21 @@ public class TestTPCC {
 //			
 			
 			
-			//loadData();
+		
 			
 			//TransactionsThroughput.start();
 //			
 
 //////			
 			TPCCBenchmark benchmark = new TPCCBenchmark();
-			benchmark.numberOfTransactions  = 400;
+			benchmark.numberOfTransactions  = 10;
 			benchmark.saveEventsLog = false;
 			benchmark.serial = false;
 			TPCCBenchmark.debug = false;
 			
-			benchmark.RANDOM_VALUES = true;
+			benchmark.RANDOM_VALUES = false;
 			benchmark.EXECUTE_ALL = false;
-			//benchmark.startBenchmark();
+			benchmark.startBenchmark();
 
 			
 //			Thread.sleep(80000);
