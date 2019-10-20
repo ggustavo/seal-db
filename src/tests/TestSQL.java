@@ -20,6 +20,7 @@ public class TestSQL {
 		
 		Thread.sleep(2000);
 		
+		
 		DBConnection connection = Kernel.getTransactionManager().getLocalConnection("tpch", "admin", "admin");
 		
 		ITransaction transaction = Kernel.getExecuteTransactions().begin(connection);
