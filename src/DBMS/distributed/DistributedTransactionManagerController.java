@@ -4,6 +4,7 @@ import java.net.InetAddress;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Level;
 
@@ -18,6 +19,9 @@ import DBMS.distributed.resourceManager.TransactionService;
 import DBMS.distributed.resourceManager.message.MessageHeader;
 import DBMS.distributed.resourceManager.message.types.LogTransactionMessage;
 import DBMS.distributed.resourceManager.message.types.NewConnectionMessage;
+import DBMS.queryProcessing.ITable;
+import DBMS.queryProcessing.ITuple;
+import DBMS.queryProcessing.queryEngine.InteratorsAlgorithms.TableScan;
 
 
 
@@ -34,11 +38,14 @@ public class DistributedTransactionManagerController {
 	private TransactionService transactionService;
 	private PersistenceMessageService persistenceMessageService;
 	
+	
+	private HashMap<String, ExternalTransactionManagerInterface> managers;
+	
 	public static DistributedTransactionManagerController getInstance(){
 		if(tm == null){
 			tm = new DistributedTransactionManagerController();
-			tm.start();
-			
+			tm.managers = new HashMap<>();
+			tm.start();		
 		}
 		return tm;
 	}
@@ -164,6 +171,10 @@ public class DistributedTransactionManagerController {
 		return persistenceMessageService;
 	}
 
-	
+	public HashMap<String, ExternalTransactionManagerInterface> getExternalTransactionManager() {
+		return managers;
+	}
+
+
 
 }

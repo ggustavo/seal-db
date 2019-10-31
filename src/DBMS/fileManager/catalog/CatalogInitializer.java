@@ -337,6 +337,16 @@ public class CatalogInitializer {
 		Kernel.log(this.getClass(),"open schema: " + schema + " path: " + path,Level.CONFIG);
 		return schema;
 	}
+
+
+	public ITransaction getCatalogTransaction() {
+		return catalogTransaction;
+	}
+
+
+	public void setCatalogTransaction(ITransaction catalogTransaction) {
+		this.catalogTransaction = catalogTransaction;
+	}
 	
 
 	
