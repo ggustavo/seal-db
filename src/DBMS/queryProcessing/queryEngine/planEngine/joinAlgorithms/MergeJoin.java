@@ -34,7 +34,7 @@ public void execute(ITable resultTable) {
 		}
 
 	
-			while ( tr != null) { //para cada tupla tR em r faça
+			while ( tr != null) { //para cada tupla tR em r fa?a
 
 				showTupleLeft(tr);
 				while (ts != null && AbstractPlanOperation.makeComparison(tr.getColunmData(tableLeft.getIdColumn(attributesOperatorsValues.get(0).getAtribute())),">=",ts.getColunmData(tableRight.getIdColumn(attributesOperatorsValues.get(0).getValue())))) {

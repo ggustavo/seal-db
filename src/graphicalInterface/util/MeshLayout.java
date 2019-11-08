@@ -14,7 +14,7 @@ import java.awt.*;
  * <P><DL>
  * <DT><B>License:</B></DT>
  * <DD><pre>
- *  Copyright © 2006, 2007 Roberto Mariottini. All rights reserved.
+ *  Copyright ? 2006, 2007 Roberto Mariottini. All rights reserved.
  *
  *  Permission is granted to anyone to use this software in source and binary forms
  *  for any purpose, with or without modification, including commercial applications,
