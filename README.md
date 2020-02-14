@@ -22,11 +22,11 @@ Choose some settings, for example the buffer size (in pages), buffer policy, amo
 
 ![alt text](https://github.com/ggustavo/seal-db/raw/master/GUI-examples/settings.png "Settings")
 
-Open new connections in different schemas and execute queries
+Open new connections in different schemas and execute queries.
 
 ![alt text](https://github.com/ggustavo/seal-db/raw/master/GUI-examples/connection.png "Connection")
 
-The buffer manager window are updated in real time according to queries submitted. Dirty (modified) pages and non-dirty (not modified) pages are depicted in colors orange and yellow respectively, whereas hot pages and cold pages takes colors red and blue respectively, in LRU list. In addition, hit count and miss count as well as hit ratio are always computed
+The buffer manager window are updated in real time according to queries submitted. Dirty (modified) pages and non-dirty (not modified) pages are depicted in colors orange and yellow respectively, whereas hot pages and cold pages takes colors red and blue respectively, in LRU list. In addition, hit count and miss count as well as hit ratio are always computed.
 
 ![alt text](https://github.com/ggustavo/seal-db/raw/master/GUI-examples/buffer.png "Buffer Manager")
 
