@@ -24,12 +24,12 @@ public class BlockNestedLoopJoin extends AbstractJoinAlgorithm{
 		ITuple tr = null;
 				
 		tableScanLeft.reset();
-		while((br = tableScanLeft.nextBlock()) != null ){ //para cada bloco Br da tabela r faça 
+		while((br = tableScanLeft.nextBlock()) != null ){ //para cada bloco Br da tabela r fa?a 
 			
 			showBlockLeft(br);	
 
 			tableScanRight.reset();
-			while((bs = tableScanRight.nextBlock())!=null){ //para cada bloco Bs da tabela s faça
+			while((bs = tableScanRight.nextBlock())!=null){ //para cada bloco Bs da tabela s fa?a
 				
 				showBlockRight(bs);
 
